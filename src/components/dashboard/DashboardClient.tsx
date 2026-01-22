@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
 import { useUserStore } from '@/store/userStore'
 import { useThemeStore } from '@/store/themeStore'
@@ -165,9 +166,9 @@ export default function DashboardClient({
             <h2 className="text-xl font-semibold text-slate-900 dark:text-white">
               Recent Journal
             </h2>
-            <button className="px-4 py-2 bg-primary text-white rounded-lg text-sm font-medium hover:bg-primary/90">
+            <Link href="/journal/new" className="px-4 py-2 bg-primary text-white rounded-lg text-sm font-medium hover:bg-primary/90">
               Write Entry
-            </button>
+            </Link>
           </div>
 
           {entries.length === 0 ? (
