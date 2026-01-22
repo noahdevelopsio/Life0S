@@ -63,13 +63,21 @@ export default function DashboardClient({
           </div>
 
           <div className="flex items-center space-x-2">
+            <Link
+              href="/ai"
+              className="p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-400 hover:text-primary"
+              title="AI Companion"
+            >
+              🤖
+            </Link>
             <button
               onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
               className="p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800"
+              title="Toggle theme"
             >
               {theme === 'dark' ? '☀️' : '🌙'}
             </button>
-            <button className="p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800">
+            <button className="p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800" title="Settings">
               ⚙️
             </button>
           </div>
