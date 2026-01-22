@@ -168,6 +168,74 @@ export default function DashboardClient({
           )}
         </section>
 
+        {/* Quick Actions */}
+        <section>
+          <h2 className="text-xl font-semibold text-slate-900 dark:text-white mb-4">
+            Quick Actions
+          </h2>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <Link
+              href="/journal/new"
+              className="bg-white dark:bg-slate-800 rounded-xl p-6 shadow-sm border border-slate-200 dark:border-slate-700 hover:border-primary transition-colors group"
+            >
+              <div className="w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center mb-3 group-hover:bg-primary/20 transition-colors">
+                <span className="text-2xl">📝</span>
+              </div>
+              <h3 className="font-semibold text-slate-900 dark:text-white mb-1">
+                Write Entry
+              </h3>
+              <p className="text-sm text-slate-600 dark:text-slate-400">
+                Journal your thoughts
+              </p>
+            </Link>
+
+            <Link
+              href="/reflections"
+              className="bg-white dark:bg-slate-800 rounded-xl p-6 shadow-sm border border-slate-200 dark:border-slate-700 hover:border-primary transition-colors group"
+            >
+              <div className="w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center mb-3 group-hover:bg-primary/20 transition-colors">
+                <span className="text-2xl">🪞</span>
+              </div>
+              <h3 className="font-semibold text-slate-900 dark:text-white mb-1">
+                Reflections
+              </h3>
+              <p className="text-sm text-slate-600 dark:text-slate-400">
+                Weekly insights
+              </p>
+            </Link>
+
+            <Link
+              href="/timeline"
+              className="bg-white dark:bg-slate-800 rounded-xl p-6 shadow-sm border border-slate-200 dark:border-slate-700 hover:border-primary transition-colors group"
+            >
+              <div className="w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center mb-3 group-hover:bg-primary/20 transition-colors">
+                <span className="text-2xl">📅</span>
+              </div>
+              <h3 className="font-semibold text-slate-900 dark:text-white mb-1">
+                Timeline
+              </h3>
+              <p className="text-sm text-slate-600 dark:text-slate-400">
+                Life journey
+              </p>
+            </Link>
+
+            <Link
+              href="/ai"
+              className="bg-white dark:bg-slate-800 rounded-xl p-6 shadow-sm border border-slate-200 dark:border-slate-700 hover:border-primary transition-colors group"
+            >
+              <div className="w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center mb-3 group-hover:bg-primary/20 transition-colors">
+                <span className="text-2xl">🤖</span>
+              </div>
+              <h3 className="font-semibold text-slate-900 dark:text-white mb-1">
+                AI Companion
+              </h3>
+              <p className="text-sm text-slate-600 dark:text-slate-400">
+                Get guidance
+              </p>
+            </Link>
+          </div>
+        </section>
+
         {/* Recent Entries */}
         <section>
           <div className="flex items-center justify-between mb-4">
