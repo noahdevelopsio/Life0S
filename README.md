@@ -32,7 +32,7 @@ LifeOS is a comprehensive personal AI-powered life operating system designed to 
 - **TanStack Query** - Server state management
 
 ### AI Integration
-- **Anthropic Claude** - AI companion and content analysis
+- **Google Gemini** - AI companion and content analysis
 - **Opik** - AI observability and evaluation
 
 ### Additional Libraries
@@ -59,7 +59,7 @@ lifeos/
 │   └── ai/                       # AI companion components
 ├── lib/                          # Utility libraries
 │   ├── supabase/                 # Database client & middleware
-│   ├── ai/                       # AI integration
+│   ├── ai/                       # AI integration (Gemini)
 │   └── utils/                    # Helper functions
 ├── store/                        # Zustand state stores
 ├── types/                        # TypeScript type definitions
@@ -73,7 +73,7 @@ lifeos/
 - Node.js 18+
 - npm or yarn
 - Supabase account
-- Anthropic API key
+- Google Gemini API key
 
 ### Installation
 
@@ -101,7 +101,7 @@ lifeos/
    SUPABASE_SERVICE_ROLE_KEY=your_supabase_service_role_key
 
    # AI
-   ANTHROPIC_API_KEY=your_anthropic_api_key
+   GEMINI_API_KEY=your_gemini_api_key
 
    # Observability
    OPIK_API_KEY=your_opik_api_key
@@ -145,7 +145,7 @@ The app uses the following main tables:
 
 ## 🤖 AI Features
 
-### Claude Integration
+### Gemini Integration
 - **Journal Analysis**: Automatic tagging and mood detection
 - **Goal Insights**: Progress analysis and recommendations
 - **Weekly Reflections**: Automated summary generation

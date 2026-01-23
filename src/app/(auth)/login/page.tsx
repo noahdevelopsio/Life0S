@@ -1,109 +1,110 @@
-'use client'
+'use client';
 
-import { useState } from 'react'
-import Link from 'next/link'
-import { createClient } from '@/lib/supabase/client'
-import { useRouter } from 'next/navigation'
+import { useState } from 'react';
+import { useRouter } from 'next/navigation';
+import Link from 'next/link';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import * as z from 'zod';
+import { Leaf } from 'lucide-react';
+import { supabase } from '@/lib/supabase/client';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+
+const loginSchema = z.object({
+  email: z.string().email(),
+  password: z.string().min(6),
+});
+
+type LoginForm = z.infer<typeof loginSchema>;
 
 export default function LoginPage() {
-  const [email, setEmail] = useState('')
-  const [password, setPassword] = useState('')
-  const [loading, setLoading] = useState(false)
-  const [error, setError] = useState('')
-  const router = useRouter()
-  const supabase = createClient()
+  const router = useRouter();
+  const [error, setError] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setLoading(true)
-    setError('')
+  const { register, handleSubmit, formState: { errors } } = useForm<LoginForm>({
+    resolver: zodResolver(loginSchema),
+  });
 
+  const onSubmit = async (data: LoginForm) => {
+    setLoading(true);
+    setError(null);
     try {
-      const { data, error } = await supabase.auth.signInWithPassword({
-        email,
-        password,
-      })
+      const { error } = await supabase.auth.signInWithPassword({
+        email: data.email,
+        password: data.password,
+      });
 
-      if (error) {
-        setError(error.message)
-      } else {
-        router.push('/dashboard')
-      }
-    } catch (err) {
-      setError('An unexpected error occurred')
+      if (error) throw error;
+      router.push('/dashboard');
+      router.refresh();
+    } catch (err: any) {
+      setError(err.message);
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   return (
-    <div className="w-full max-w-md space-y-8">
-      <div className="text-center">
-        <h1 className="text-3xl font-bold text-slate-900 dark:text-white">
+    <div className="space-y-8">
+      <div className="text-center space-y-2">
+        <div className="w-12 h-12 bg-primary/10 rounded-xl flex items-center justify-center mx-auto mb-6 text-primary">
+          <Leaf className="w-6 h-6" />
+        </div>
+        <h2 className="text-3xl font-display font-semibold tracking-tight text-slate-900 dark:text-white">
           Welcome back
-        </h1>
-        <p className="mt-2 text-slate-600 dark:text-slate-400">
-          Sign in to your LifeOS account
+        </h2>
+        <p className="text-slate-500 dark:text-slate-400">
+          Enter your details to access your sanctuary
         </p>
       </div>
 
-      <form onSubmit={handleSubmit} className="space-y-6">
-        <div>
-          <label htmlFor="email" className="block text-sm font-medium text-slate-700 dark:text-slate-300">
-            Email
-          </label>
-          <input
+      <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
+        <div className="space-y-2">
+          <Label htmlFor="email" className="text-slate-700 dark:text-slate-300">Email</Label>
+          <Input
             id="email"
             type="email"
-            required
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            className="mt-1 block w-full rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 px-3 py-2 text-slate-900 dark:text-white placeholder-slate-400 focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
-            placeholder="Enter your email"
+            placeholder="name@example.com"
+            {...register('email')}
+            className="bg-white/50 border-slate-200 focus:border-primary focus:ring-primary/20 transition-all h-11"
           />
+          {errors.email && <p className="text-sm text-red-500">{errors.email.message}</p>}
         </div>
 
-        <div>
-          <label htmlFor="password" className="block text-sm font-medium text-slate-700 dark:text-slate-300">
-            Password
-          </label>
-          <input
+        <div className="space-y-2">
+          <div className="flex justify-between items-center">
+            <Label htmlFor="password" className="text-slate-700 dark:text-slate-300">Password</Label>
+            <Link href="/forgot-password" className="text-xs text-primary hover:underline">Forgot password?</Link>
+          </div>
+          <Input
             id="password"
             type="password"
-            required
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            className="mt-1 block w-full rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 px-3 py-2 text-slate-900 dark:text-white placeholder-slate-400 focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
-            placeholder="Enter your password"
+            {...register('password')}
+            className="bg-white/50 border-slate-200 focus:border-primary focus:ring-primary/20 transition-all h-11"
           />
+          {errors.password && <p className="text-sm text-red-500">{errors.password.message}</p>}
         </div>
 
         {error && (
-          <div className="rounded-md bg-red-50 dark:bg-red-900/20 p-4">
-            <p className="text-sm text-red-800 dark:text-red-400">{error}</p>
+          <div className="p-3 text-sm text-red-600 bg-red-50 border border-red-100 rounded-lg text-center">
+            {error}
           </div>
         )}
 
-        <button
-          type="submit"
-          disabled={loading}
-          className="w-full flex justify-center py-3 px-4 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-primary hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-        >
+        <Button type="submit" className="w-full h-12 rounded-xl text-md font-medium shadow-lg hover:shadow-primary/20 transition-all text-white" disabled={loading}>
           {loading ? 'Signing in...' : 'Sign in'}
-        </button>
+        </Button>
       </form>
 
-      <div className="text-center">
-        <p className="text-slate-600 dark:text-slate-400">
-          Don't have an account?{' '}
-          <Link href="/signup" className="text-primary hover:text-primary/80 font-medium">
-            Sign up
-          </Link>
-        </p>
-        <Link href="/" className="block mt-4 text-sm text-slate-500 hover:text-slate-400">
-          ← Back to home
+      <div className="text-center text-sm">
+        <span className="text-slate-500 dark:text-slate-400">Don't have an account? </span>
+        <Link href="/signup" className="font-semibold text-primary hover:text-primary/80 transition-colors">
+          Create account
         </Link>
       </div>
     </div>
-  )
+  );
 }

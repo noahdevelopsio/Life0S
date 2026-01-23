@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { useUserStore } from '@/store/userStore'
 import { getWeeklyReflectionPrompt } from '@/lib/ai/prompts'
-import { chatWithClaude } from '@/lib/ai/claude'
+import { chatWithGemini } from '@/lib/ai/gemini'
 
 type Reflection = {
   id: string
@@ -77,7 +77,7 @@ export default function ReflectionsPage() {
       }
 
       const prompt = getWeeklyReflectionPrompt(weeklyData)
-      const response = await chatWithClaude([{ role: 'user', content: prompt }],
+      const response = await chatWithGemini([{ role: 'user', content: prompt }],
         'You are a compassionate reflection guide helping users understand their weekly journey.')
 
       // Save reflection
@@ -135,7 +135,7 @@ export default function ReflectionsPage() {
     })
 
     return Object.entries(tagCount)
-      .sort(([,a], [,b]) => b - a)
+      .sort(([, a], [, b]) => b - a)
       .slice(0, 5)
       .map(([tag]) => tag)
   }

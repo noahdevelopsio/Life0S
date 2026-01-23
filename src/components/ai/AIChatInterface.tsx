@@ -1,10 +1,10 @@
 'use client'
 
 import { useState, useRef, useEffect } from 'react'
-import { ClaudeMessage } from '@/lib/ai/claude'
+import { GeminiMessage } from '@/lib/ai/gemini'
 
 interface AIChatInterfaceProps {
-  messages: ClaudeMessage[]
+  messages: GeminiMessage[]
   suggestions: string[]
   onSendMessage: (message: string) => void
   isLoading: boolean
@@ -104,11 +104,10 @@ export default function AIChatInterface({
                 className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}
               >
                 <div
-                  className={`max-w-xs lg:max-w-md xl:max-w-lg px-4 py-3 rounded-2xl ${
-                    message.role === 'user'
-                      ? 'bg-primary text-white'
-                      : 'bg-white dark:bg-slate-800 text-slate-900 dark:text-white border border-slate-200 dark:border-slate-700'
-                  }`}
+                  className={`max-w-xs lg:max-w-md xl:max-w-lg px-4 py-3 rounded-2xl ${message.role === 'user'
+                    ? 'bg-primary text-white'
+                    : 'bg-white dark:bg-slate-800 text-slate-900 dark:text-white border border-slate-200 dark:border-slate-700'
+                    }`}
                 >
                   <p className="text-sm leading-relaxed">{message.content}</p>
                 </div>

@@ -24,7 +24,8 @@ const config: Config = {
         background: "hsl(var(--background))",
         foreground: "hsl(var(--foreground))",
         primary: {
-          DEFAULT: "#5A7C5F", // Sage green from designs
+          DEFAULT: "#5A7C5F",
+          foreground: "#ffffff",
           50: "#F0F4F0",
           100: "#E3EDE4",
           200: "#C7DBC8",
@@ -35,7 +36,6 @@ const config: Config = {
           700: "#3A4C3B",
           800: "#2A3429",
           900: "#1A1C17",
-          foreground: "#ffffff",
         },
         secondary: {
           DEFAULT: "hsl(var(--secondary))",
@@ -103,7 +103,13 @@ const config: Config = {
       },
     },
   },
-  plugins: [require("tailwindcss-animate")],
+  plugins: [], // tailwindcss-animate is often not needed in v4 or should be imported different. 
+  // For v4 compatibility, better check if plugin is compatible. 
+  // Assuming it is, but require is the issue.
+  // Actually tailwindcss-animate might not be needed with v4 native animations or needs 'tailwindcss-animate' import.
+  // Let's comment out plugin for now or use import if supported.
+  // import animate from "tailwindcss-animate"; plugins: [animate]
+
 }
 
 export default config

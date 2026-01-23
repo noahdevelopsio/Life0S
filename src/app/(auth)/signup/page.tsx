@@ -1,131 +1,142 @@
-'use client'
+'use client';
 
-import { useState } from 'react'
-import Link from 'next/link'
-import { createClient } from '@/lib/supabase/client'
-import { useRouter } from 'next/navigation'
+import { useState } from 'react';
+import { useRouter } from 'next/navigation';
+import Link from 'next/link';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import * as z from 'zod';
+import { Sprout } from 'lucide-react';
+import { supabase } from '@/lib/supabase/client';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+
+const signupSchema = z.object({
+  fullName: z.string().min(2, "Name must be at least 2 characters"),
+  email: z.string().email(),
+  password: z.string().min(6, "Password must be at least 6 characters"),
+});
+
+type SignupForm = z.infer<typeof signupSchema>;
 
 export default function SignupPage() {
-  const [email, setEmail] = useState('')
-  const [password, setPassword] = useState('')
-  const [confirmPassword, setConfirmPassword] = useState('')
-  const [loading, setLoading] = useState(false)
-  const [error, setError] = useState('')
-  const router = useRouter()
-  const supabase = createClient()
+  const router = useRouter();
+  const [error, setError] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setLoading(true)
-    setError('')
+  const { register, handleSubmit, formState: { errors } } = useForm<SignupForm>({
+    resolver: zodResolver(signupSchema),
+  });
 
-    if (password !== confirmPassword) {
-      setError('Passwords do not match')
-      setLoading(false)
-      return
-    }
-
+  const onSubmit = async (data: SignupForm) => {
+    setLoading(true);
+    setError(null);
     try {
-      const { data, error } = await supabase.auth.signUp({
-        email,
-        password,
-      })
+      const { data: authData, error: authError } = await supabase.auth.signUp({
+        email: data.email,
+        password: data.password,
+        options: {
+          data: {
+            full_name: data.fullName,
+          },
+        },
+      });
 
-      if (error) {
-        setError(error.message)
-      } else {
-        router.push('/onboarding')
+      if (authError) throw authError;
+
+      if (authData.user) {
+        // Manually create profile if trigger doesn't exist (failsafe)
+        const { error: profileError } = await supabase
+          .from('profiles')
+          .insert({
+            id: authData.user.id,
+            full_name: data.fullName,
+            username: data.email.split('@')[0],
+          });
+
+        if (profileError) {
+          // Ignore duplicate key error if trigger ran
+          if (profileError.code !== '23505') console.error("Profile creation error", profileError);
+        }
       }
-    } catch (err) {
-      setError('An unexpected error occurred')
+
+      router.push('/dashboard');
+      router.refresh();
+    } catch (err: any) {
+      setError(err.message);
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   return (
-    <div className="w-full max-w-md space-y-8">
-      <div className="text-center">
-        <h1 className="text-3xl font-bold text-slate-900 dark:text-white">
-          Join LifeOS
-        </h1>
-        <p className="mt-2 text-slate-600 dark:text-slate-400">
-          Create your account to get started
+    <div className="space-y-8">
+      <div className="text-center space-y-2">
+        <div className="w-12 h-12 bg-primary/10 rounded-xl flex items-center justify-center mx-auto mb-6 text-primary">
+          <Sprout className="w-6 h-6" />
+        </div>
+        <h2 className="text-3xl font-display font-semibold tracking-tight text-slate-900 dark:text-white">
+          Start your journey
+        </h2>
+        <p className="text-slate-500 dark:text-slate-400">
+          Create an account to begin your mindful productivity practice
         </p>
       </div>
 
-      <form onSubmit={handleSubmit} className="space-y-6">
-        <div>
-          <label htmlFor="email" className="block text-sm font-medium text-slate-700 dark:text-slate-300">
-            Email
-          </label>
-          <input
+      <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
+        <div className="space-y-2">
+          <Label htmlFor="fullName" className="text-slate-700 dark:text-slate-300">Full Name</Label>
+          <Input
+            id="fullName"
+            type="text"
+            placeholder="John Doe"
+            {...register('fullName')}
+            className="bg-white/50 border-slate-200 focus:border-primary focus:ring-primary/20 transition-all h-11"
+          />
+          {errors.fullName && <p className="text-sm text-red-500">{errors.fullName.message}</p>}
+        </div>
+
+        <div className="space-y-2">
+          <Label htmlFor="email" className="text-slate-700 dark:text-slate-300">Email</Label>
+          <Input
             id="email"
             type="email"
-            required
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            className="mt-1 block w-full rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 px-3 py-2 text-slate-900 dark:text-white placeholder-slate-400 focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
-            placeholder="Enter your email"
+            placeholder="you@example.com"
+            {...register('email')}
+            className="bg-white/50 border-slate-200 focus:border-primary focus:ring-primary/20 transition-all h-11"
           />
+          {errors.email && <p className="text-sm text-red-500">{errors.email.message}</p>}
         </div>
 
-        <div>
-          <label htmlFor="password" className="block text-sm font-medium text-slate-700 dark:text-slate-300">
-            Password
-          </label>
-          <input
+        <div className="space-y-2">
+          <Label htmlFor="password" className="text-slate-700 dark:text-slate-300">Password</Label>
+          <Input
             id="password"
             type="password"
-            required
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            className="mt-1 block w-full rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 px-3 py-2 text-slate-900 dark:text-white placeholder-slate-400 focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
-            placeholder="Create a password"
+            {...register('password')}
+            className="bg-white/50 border-slate-200 focus:border-primary focus:ring-primary/20 transition-all h-11"
           />
-        </div>
-
-        <div>
-          <label htmlFor="confirmPassword" className="block text-sm font-medium text-slate-700 dark:text-slate-300">
-            Confirm Password
-          </label>
-          <input
-            id="confirmPassword"
-            type="password"
-            required
-            value={confirmPassword}
-            onChange={(e) => setConfirmPassword(e.target.value)}
-            className="mt-1 block w-full rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 px-3 py-2 text-slate-900 dark:text-white placeholder-slate-400 focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
-            placeholder="Confirm your password"
-          />
+          {errors.password && <p className="text-sm text-red-500">{errors.password.message}</p>}
         </div>
 
         {error && (
-          <div className="rounded-md bg-red-50 dark:bg-red-900/20 p-4">
-            <p className="text-sm text-red-800 dark:text-red-400">{error}</p>
+          <div className="p-3 text-sm text-red-600 bg-red-50 border border-red-100 rounded-lg text-center">
+            {error}
           </div>
         )}
 
-        <button
-          type="submit"
-          disabled={loading}
-          className="w-full flex justify-center py-3 px-4 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-primary hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-        >
-          {loading ? 'Creating account...' : 'Create account'}
-        </button>
+        <Button type="submit" className="w-full h-12 rounded-xl text-md font-medium shadow-lg hover:shadow-primary/20 transition-all text-white" disabled={loading}>
+          {loading ? 'Creating account...' : 'Create Account'}
+        </Button>
       </form>
 
-      <div className="text-center">
-        <p className="text-slate-600 dark:text-slate-400">
-          Already have an account?{' '}
-          <Link href="/login" className="text-primary hover:text-primary/80 font-medium">
-            Sign in
-          </Link>
-        </p>
-        <Link href="/" className="block mt-4 text-sm text-slate-500 hover:text-slate-400">
-          ← Back to home
+      <div className="text-center text-sm">
+        <span className="text-slate-500 dark:text-slate-400">Already have an account? </span>
+        <Link href="/login" className="font-semibold text-primary hover:text-primary/80 transition-colors">
+          Sign in
         </Link>
       </div>
     </div>
-  )
+  );
 }

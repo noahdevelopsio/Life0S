@@ -1,26 +1,75 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
-
-@theme inline {
+@theme {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+
+  --color-primary: #5A7C5F;
+  --color-primary-foreground: #ffffff;
+
+  --color-secondary: hsl(140 20% 96%);
+  --color-secondary-foreground: #171717;
+
+  --color-destuctive: hsl(0 84.2% 60.2%);
+  --color-destructive-foreground: #ffffff;
+
+  --color-muted: hsl(140 10% 96%);
+  --color-muted-foreground: hsl(240 3.8% 46.1%);
+
+  --color-accent: hsl(140 20% 96%);
+  --color-accent-foreground: #171717;
+
+  --color-popover: #ffffff;
+  --color-popover-foreground: #171717;
+
+  --color-card: #ffffff;
+  --color-card-foreground: #171717;
+
+  --radius: 0.5rem;
+
+  --font-display: 'Plus Jakarta Sans', 'Inter', sans-serif;
+  --font-sans: 'Plus Jakarta Sans', 'Inter', sans-serif;
+}
+
+:root {
+  --background: #F8FAF9;
+  --foreground: #171717;
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --background: #0a0a0a;
+    --background: #0F1410;
     --foreground: #ededed;
   }
 }
 
 body {
-  background: var(--background);
+  background-color: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-sans);
+  overflow-x: hidden;
+}
+
+/* Custom Utilities */
+.glass {
+  background: rgba(255, 255, 255, 0.7);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.5);
+}
+
+.dark .glass {
+  background: rgba(20, 30, 22, 0.6);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.orb-gradient {
+  background: radial-gradient(circle at 30% 30%, #D1E9D2 0%, #A3C9A8 50%, #76A880 100%);
+  box-shadow: 0 0 60px rgba(118, 168, 128, 0.4);
+}
+
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
 }
