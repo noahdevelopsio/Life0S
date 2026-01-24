@@ -38,9 +38,6 @@ export async function chatWithGemini(
         const response = await result.response;
         const text = response.text();
 
-        // Log to Opik (optional/background)
-        trackFeatureUsage('ai_chat', 'system', { model: 'gemini-1.5-flash' }).catch(() => { });
-
         return {
             role: 'model',
             content: text,
@@ -48,5 +45,74 @@ export async function chatWithGemini(
     } catch (error) {
         console.error('Error calling Gemini:', error);
         throw new Error('Failed to generate response from Gemini');
+    }
+}
+
+export async function geminiJSON<T>(
+    prompt: string,
+    systemInstruction: string
+): Promise<T> {
+    try {
+        const model = genAI.getGenerativeModel({
+            model: 'gemini-1.5-flash',
+            systemInstruction: systemInstruction,
+            generationConfig: {
+                responseMimeType: "application/json",
+            }
+        });
+
+        const result = await model.generateContent(prompt);
+        const response = await result.response;
+        const text = response.text();
+
+        try {
+            return JSON.parse(text) as T;
+        } catch (e) {
+            console.error("Failed to parse JSON response", text);
+            throw new Error("Invalid JSON response from AI");
+        }
+    } catch (error) {
+        console.error('Error calling Gemini JSON:', error);
+        throw new Error('Failed to generate JSON response from Gemini');
+    }
+}
+
+export async function streamGemini(
+    messages: any[], // Accepting any[] to match usage in route where it might differ slightly
+    systemInstruction: string,
+    onChunk: (chunk: string) => void
+) {
+    try {
+        const model = genAI.getGenerativeModel({
+            model: 'gemini-1.5-flash',
+            systemInstruction: systemInstruction
+        });
+
+        // Convert typical message format {role, content} to Gemini history
+        // Assuming messages are in a standard format
+        const history = messages.slice(0, -1).map(msg => ({
+            role: msg.role === 'assistant' || msg.role === 'model' ? 'model' : 'user',
+            parts: [{ text: msg.content || '' }],
+        }));
+
+        const lastMsg = messages[messages.length - 1];
+        const lastMsgContent = lastMsg.content || '';
+
+        const chat = model.startChat({
+            history: history,
+        });
+
+        const result = await chat.sendMessageStream(lastMsgContent);
+
+        for await (const chunk of result.stream) {
+            const chunkText = chunk.text();
+            if (chunkText) {
+                onChunk(chunkText);
+            }
+        }
+
+    } catch (error) {
+        console.error('Error streaming Gemini:', error);
+        throw error;
     }
 }

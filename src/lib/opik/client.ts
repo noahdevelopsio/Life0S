@@ -56,7 +56,7 @@ export async function geminiWithOpik(
             metadata: {
                 duration,
                 success: true,
-                tokensEstimate: response.length / 4,
+                tokensEstimate: response.content.length / 4,
             },
         });
 
