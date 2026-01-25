@@ -48,8 +48,8 @@ export default function LoginPage() {
       if (error) throw error;
 
       console.log('[Login] Success! Redirecting to /dashboard...');
-      router.push('/dashboard');
-      router.refresh();
+      // Use hard navigation to ensure cookies are sent and cache is cleared
+      window.location.href = '/dashboard';
     } catch (err: any) {
       console.error('[Login] Error caught:', err);
       setError(err.message);
