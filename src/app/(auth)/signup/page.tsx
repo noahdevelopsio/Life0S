@@ -39,27 +39,14 @@ export default function SignupPage() {
         options: {
           data: {
             full_name: data.fullName,
+            username: data.email.split('@')[0],
           },
         },
       });
 
       if (authError) throw authError;
 
-      if (authData.user) {
-        // Manually create profile if trigger doesn't exist (failsafe)
-        const { error: profileError } = await supabase
-          .from('profiles')
-          .insert({
-            id: authData.user.id,
-            full_name: data.fullName,
-            username: data.email.split('@')[0],
-          });
-
-        if (profileError) {
-          // Ignore duplicate key error if trigger ran
-          if (profileError.code !== '23505') console.error("Profile creation error", profileError);
-        }
-      }
+      // Profile creation is handled by the database trigger
 
       router.push('/dashboard');
       router.refresh();
