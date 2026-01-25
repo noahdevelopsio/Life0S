@@ -31,16 +31,27 @@ export default function LoginPage() {
   const onSubmit = async (data: LoginForm) => {
     setLoading(true);
     setError(null);
+    console.log('[Login] Attempting login for:', data.email);
+
     try {
-      const { error } = await supabase.auth.signInWithPassword({
+      const { data: authData, error } = await supabase.auth.signInWithPassword({
         email: data.email,
         password: data.password,
       });
 
+      console.log('[Login] Supabase response:', {
+        user: authData.user?.id,
+        session: !!authData.session,
+        error: error?.message
+      });
+
       if (error) throw error;
+
+      console.log('[Login] Success! Redirecting to /dashboard...');
       router.push('/dashboard');
       router.refresh();
     } catch (err: any) {
+      console.error('[Login] Error caught:', err);
       setError(err.message);
     } finally {
       setLoading(false);
