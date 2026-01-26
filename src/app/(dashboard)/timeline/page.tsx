@@ -3,6 +3,20 @@
 import { useState, useEffect } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { useUserStore } from '@/store/userStore'
+import { Calendar, Smile, Meh, Frown, Star, Frown as FrownIcon } from 'lucide-react';
+import { Spinner } from '@/components/ui/spinner';
+
+// Mood Icon Component
+const MoodIcon = ({ mood }: { mood: string | null }) => {
+  switch (mood) {
+    case 'great': return <Smile className="w-8 h-8 text-green-500" />;
+    case 'good': return <Smile className="w-8 h-8 text-blue-500" />;
+    case 'okay': return <Meh className="w-8 h-8 text-yellow-500" />;
+    case 'bad': return <Frown className="w-8 h-8 text-orange-500" />;
+    case 'terrible': return <FrownIcon className="w-8 h-8 text-red-500" />;
+    default: return <div className="w-3 h-3 bg-slate-300 rounded-full" />;
+  }
+};
 
 type Entry = {
   id: string
@@ -95,10 +109,7 @@ export default function TimelinePage() {
   if (loading) {
     return (
       <div className="min-h-screen bg-background-light dark:bg-background-dark flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
-          <p className="text-slate-600 dark:text-slate-400">Loading your timeline...</p>
-        </div>
+        <Spinner />
       </div>
     )
   }
@@ -155,7 +166,7 @@ export default function TimelinePage() {
               <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
                 Filter by mood
               </label>
-            <select
+              <select
                 value={selectedMood || ''}
                 onChange={(e) => setSelectedMood(e.target.value === '' ? null : e.target.value)}
                 className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 rounded-lg text-slate-900 dark:text-white"
@@ -215,8 +226,8 @@ export default function TimelinePage() {
         <div className="relative">
           {filteredEntries.length === 0 ? (
             <div className="bg-white dark:bg-slate-800 rounded-xl p-12 text-center">
-              <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
-                <span className="text-2xl">📅</span>
+              <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4 text-primary">
+                <Calendar className="w-8 h-8" />
               </div>
               <h3 className="text-lg font-semibold text-slate-900 dark:text-white mb-2">
                 {entries.length === 0 ? 'No entries yet' : 'No entries match your filters'}
@@ -255,7 +266,7 @@ export default function TimelinePage() {
                     {/* Timeline dot */}
                     <div className="relative z-10 flex-shrink-0">
                       <div className="w-16 h-16 bg-white dark:bg-slate-800 border-4 border-primary rounded-full flex items-center justify-center shadow-sm">
-                        <span className="text-xl">{getMoodEmoji(entry.mood)}</span>
+                        <MoodIcon mood={entry.mood} />
                       </div>
                     </div>
 
@@ -287,7 +298,7 @@ export default function TimelinePage() {
                               })}
                             </span>
                             {entry.is_favorite && (
-                              <span className="text-yellow-500" title="Favorite">⭐</span>
+                              <Star className="w-4 h-4 text-yellow-500 fill-yellow-500" />
                             )}
                           </div>
                         </div>

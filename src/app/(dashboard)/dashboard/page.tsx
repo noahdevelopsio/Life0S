@@ -12,8 +12,8 @@ import { Spinner } from '@/components/ui/spinner';
 
 export default function DashboardPage() {
   const { user } = useUser();
-  const [goals, setGoals] = useState([]);
-  const [todayEntries, setTodayEntries] = useState([]);
+  const [goals, setGoals] = useState<any[]>([]);
+  const [todayEntries, setTodayEntries] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
   // Simplified data loading without Opik for now to ensure base functionality first

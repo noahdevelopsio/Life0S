@@ -3,10 +3,11 @@
 import { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase/client';
 import { Button } from '@/components/ui/button';
-import { Plus, Search } from 'lucide-react';
+import { Plus, Search, FileText, Sparkles } from 'lucide-react';
 import Link from 'next/link';
 import { useUser } from '@/lib/hooks/useUser';
 import { Input } from '@/components/ui/input';
+import { Spinner } from '@/components/ui/spinner';
 
 export default function JournalPage() {
     const { user } = useUser();
@@ -58,7 +59,9 @@ export default function JournalPage() {
 
             <div className="space-y-4">
                 {loading ? (
-                    <div>Loading entries...</div>
+                    <div className="flex justify-center py-12">
+                        <Spinner />
+                    </div>
                 ) : filteredEntries.length === 0 ? (
                     <div className="text-center py-12 text-slate-500">
                         No entries found.
@@ -68,8 +71,8 @@ export default function JournalPage() {
                         <div key={entry.id} className="bg-white dark:bg-slate-800/50 p-6 rounded-[24px] shadow-sm hover:shadow-md transition-shadow">
                             <div className="flex justify-between items-start mb-4">
                                 <div className="flex items-center gap-3">
-                                    <div className="h-10 w-10 bg-slate-100 dark:bg-slate-700 rounded-xl flex items-center justify-center text-xl">
-                                        📄
+                                    <div className="h-10 w-10 bg-slate-100 dark:bg-slate-700 rounded-xl flex items-center justify-center text-xl text-slate-500 dark:text-slate-400">
+                                        <FileText className="w-5 h-5" />
                                     </div>
                                     <div>
                                         <p className="font-semibold text-sm text-slate-500">{new Date(entry.entry_date).toLocaleDateString(undefined, { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</p>
@@ -89,8 +92,9 @@ export default function JournalPage() {
                             {(entry.tags?.length > 0 || entry.ai_summary) && (
                                 <div className="mt-4 pt-4 border-t border-slate-100 dark:border-slate-800 space-y-3">
                                     {entry.ai_summary && (
-                                        <div className="bg-slate-50 dark:bg-slate-900/50 p-3 rounded-lg text-sm text-slate-600 dark:text-slate-400 italic">
-                                            ✨ AI Summary: {entry.ai_summary}
+                                        <div className="bg-slate-50 dark:bg-slate-900/50 p-3 rounded-lg text-sm text-slate-600 dark:text-slate-400 italic flex items-start gap-2">
+                                            <Sparkles className="w-4 h-4 text-purple-500 mt-0.5 flex-shrink-0" />
+                                            <span>AI Summary: {entry.ai_summary}</span>
                                         </div>
                                     )}
                                     {entry.tags?.length > 0 && (

@@ -5,6 +5,8 @@ import { createClient } from '@/lib/supabase/client'
 import { useUserStore } from '@/store/userStore'
 import { getWeeklyReflectionPrompt } from '@/lib/ai/prompts'
 import { chatWithGemini } from '@/lib/ai/gemini'
+import { Sparkles } from 'lucide-react'
+import { Spinner } from '@/components/ui/spinner'
 
 type Reflection = {
   id: string
@@ -156,10 +158,7 @@ export default function ReflectionsPage() {
   if (loading) {
     return (
       <div className="min-h-screen bg-background-light dark:bg-background-dark flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
-          <p className="text-slate-600 dark:text-slate-400">Loading reflections...</p>
-        </div>
+        <Spinner />
       </div>
     )
   }
@@ -244,8 +243,8 @@ export default function ReflectionsPage() {
 
           {reflections.length === 0 ? (
             <div className="bg-white dark:bg-slate-800 rounded-xl p-8 text-center">
-              <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
-                <span className="text-2xl">🪞</span>
+              <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4 text-primary">
+                <Sparkles className="w-8 h-8" />
               </div>
               <h3 className="text-lg font-semibold text-slate-900 dark:text-white mb-2">
                 No reflections yet

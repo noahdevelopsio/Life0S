@@ -4,6 +4,11 @@ import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { useUserStore } from '@/store/userStore'
+import {
+  Rocket, Smile, Target, Star,
+  Activity, Book, Briefcase, Heart, Sprout, Palette, DollarSign, Cloud,
+  HandHeart, Zap
+} from 'lucide-react'
 
 const steps = [
   {
@@ -12,8 +17,8 @@ const steps = [
     description: 'Your personal AI companion for mindful productivity',
     content: (
       <div className="text-center space-y-6">
-        <div className="w-24 h-24 bg-primary/10 rounded-full flex items-center justify-center mx-auto">
-          <span className="text-4xl">🚀</span>
+        <div className="w-24 h-24 bg-primary/10 rounded-full flex items-center justify-center mx-auto text-primary">
+          <Rocket className="w-12 h-12" />
         </div>
         <div>
           <h2 className="text-2xl font-bold text-slate-900 dark:text-white mb-2">
@@ -37,9 +42,9 @@ const steps = [
         </h2>
         <div className="grid gap-4">
           {[
-            { id: 'supportive', name: 'Supportive', emoji: '🤗', desc: 'Encouraging and understanding' },
-            { id: 'direct', name: 'Direct', emoji: '🎯', desc: 'Straightforward and focused' },
-            { id: 'warm', name: 'Warm', emoji: '🌟', desc: 'Friendly and nurturing' }
+            { id: 'supportive', name: 'Supportive', icon: HandHeart, desc: 'Encouraging and understanding' },
+            { id: 'direct', name: 'Direct', icon: Target, desc: 'Straightforward and focused' },
+            { id: 'warm', name: 'Warm', icon: Star, desc: 'Friendly and nurturing' }
           ].map(personality => (
             <label
               key={personality.id}
@@ -52,7 +57,7 @@ const steps = [
                 className="mr-4"
               />
               <div className="flex items-center space-x-3">
-                <span className="text-2xl">{personality.emoji}</span>
+                <personality.icon className="w-6 h-6 text-primary" />
                 <div>
                   <div className="font-semibold text-slate-900 dark:text-white">
                     {personality.name}
@@ -82,14 +87,14 @@ const steps = [
         </p>
         <div className="grid grid-cols-2 gap-3">
           {[
-            { id: 'health', name: 'Health & Fitness', emoji: '💪' },
-            { id: 'learning', name: 'Learning', emoji: '📚' },
-            { id: 'career', name: 'Career', emoji: '💼' },
-            { id: 'relationships', name: 'Relationships', emoji: '❤️' },
-            { id: 'personal', name: 'Personal Growth', emoji: '🌱' },
-            { id: 'creativity', name: 'Creativity', emoji: '🎨' },
-            { id: 'finance', name: 'Finance', emoji: '💰' },
-            { id: 'spirituality', name: 'Spirituality', emoji: '🧘' }
+            { id: 'health', name: 'Health & Fitness', icon: Activity },
+            { id: 'learning', name: 'Learning', icon: Book },
+            { id: 'career', name: 'Career', icon: Briefcase },
+            { id: 'relationships', name: 'Relationships', icon: Heart },
+            { id: 'personal', name: 'Personal Growth', icon: Sprout },
+            { id: 'creativity', name: 'Creativity', icon: Palette },
+            { id: 'finance', name: 'Finance', icon: DollarSign },
+            { id: 'spirituality', name: 'Spirituality', icon: Cloud }
           ].map(category => (
             <label
               key={category.id}
@@ -101,7 +106,7 @@ const steps = [
                 value={category.id}
                 className="mr-3"
               />
-              <span className="text-xl mr-2">{category.emoji}</span>
+              <category.icon className="w-5 h-5 mr-2 text-primary" />
               <span className="text-sm font-medium text-slate-900 dark:text-white">
                 {category.name}
               </span>
@@ -269,11 +274,10 @@ export default function OnboardingPage() {
             {steps.map((_, index) => (
               <div
                 key={index}
-                className={`h-2 flex-1 rounded-full mx-1 ${
-                  index <= currentStep
+                className={`h-2 flex-1 rounded-full mx-1 ${index <= currentStep
                     ? 'bg-primary'
                     : 'bg-slate-200 dark:bg-slate-700'
-                }`}
+                  }`}
               />
             ))}
           </div>
