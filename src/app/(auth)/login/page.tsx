@@ -28,8 +28,7 @@ export default function LoginPage() {
     resolver: zodResolver(loginSchema),
   });
 
-  // Diagnostic: Check if env vars are loaded correctly
-  // This helps identify if Vercel is using the placeholder values
+
   const onSubmit = async (data: LoginForm) => {
     setLoading(true);
     setError(null);
