@@ -8,6 +8,7 @@ import { GoalsOverview } from '@/components/dashboard/GoalsOverview';
 import { QuickEntryWidget } from '@/components/dashboard/QuickEntryWidget';
 import { CalendarHeatmap } from '@/components/dashboard/CalendarHeatmap';
 import { useUser } from '@/lib/hooks/useUser';
+import { Spinner } from '@/components/ui/spinner';
 
 export default function DashboardPage() {
   const { user } = useUser();
@@ -48,7 +49,7 @@ export default function DashboardPage() {
   }
 
   if (loading) {
-    return <div className="p-6">Loading dashboard...</div>; // Could be a skeleton
+    return <Spinner />;
   }
 
   return (

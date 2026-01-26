@@ -13,8 +13,8 @@ export const metadata: Metadata = {
   description: "Stay consistent with your goals through AI-powered journaling and reflection",
   manifest: "/manifest.json",
   icons: {
-    icon: "/favicon.ico",
-    apple: "/icons/icon-192x192.png",
+    icon: "/icon.svg",
+    apple: "/icon.svg",
   },
 };
 
