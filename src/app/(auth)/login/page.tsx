@@ -28,6 +28,18 @@ export default function LoginPage() {
     resolver: zodResolver(loginSchema),
   });
 
+  // Diagnostic: Check if env vars are loaded correctly
+  // This helps identify if Vercel is using the placeholder values
+  useState(() => {
+    const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+    const isPlaceholder = url?.includes('placeholder');
+    console.log('[Diagnostics] Supabase URL:', url);
+    console.log('[Diagnostics] Is using placeholder?', isPlaceholder);
+    if (isPlaceholder) {
+      console.error('[CRITICAL] App is running with PLACEHOLDER environment variables. Login will NOT work.');
+    }
+  });
+
   const onSubmit = async (data: LoginForm) => {
     setLoading(true);
     setError(null);
