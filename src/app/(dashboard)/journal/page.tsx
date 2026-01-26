@@ -40,7 +40,7 @@ export default function JournalPage() {
         <div className="max-w-4xl mx-auto p-4 md:p-6 space-y-6">
             <div className="flex justify-between items-center">
                 <h1 className="text-3xl font-bold">Journal</h1>
-                <Link href="/dashboard/journal/new">
+                <Link href="/journal/new">
                     <Button className="rounded-full">
                         <Plus className="w-5 h-5 mr-2" /> New Entry
                     </Button>
