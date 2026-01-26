@@ -37,7 +37,7 @@ export async function middleware(request: NextRequest) {
     data: { user },
   } = await supabase.auth.getUser()
 
-  console.log('[Middleware] Path:', request.nextUrl.pathname, '| User ID:', user?.id || 'none');
+
 
   // Protect dashboard and other authenticated routes
   if (request.nextUrl.pathname.startsWith('/dashboard') && !user) {

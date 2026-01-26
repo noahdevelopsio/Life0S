@@ -30,20 +30,9 @@ export default function LoginPage() {
 
   // Diagnostic: Check if env vars are loaded correctly
   // This helps identify if Vercel is using the placeholder values
-  useState(() => {
-    const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
-    const isPlaceholder = url?.includes('placeholder');
-    console.log('[Diagnostics] Supabase URL:', url);
-    console.log('[Diagnostics] Is using placeholder?', isPlaceholder);
-    if (isPlaceholder) {
-      console.error('[CRITICAL] App is running with PLACEHOLDER environment variables. Login will NOT work.');
-    }
-  });
-
   const onSubmit = async (data: LoginForm) => {
     setLoading(true);
     setError(null);
-    console.log('[Login] Attempting login for:', data.email);
 
     try {
       const { data: authData, error } = await supabase.auth.signInWithPassword({
@@ -51,19 +40,11 @@ export default function LoginPage() {
         password: data.password,
       });
 
-      console.log('[Login] Supabase response:', {
-        user: authData.user?.id,
-        session: !!authData.session,
-        error: error?.message
-      });
-
       if (error) throw error;
 
-      console.log('[Login] Success! Redirecting to /dashboard...');
-      // Use hard navigation to ensure cookies are sent and cache is cleared
-      window.location.href = '/dashboard';
+      router.refresh();
+      router.push('/dashboard');
     } catch (err: any) {
-      console.error('[Login] Error caught:', err);
       setError(err.message);
     } finally {
       setLoading(false);
