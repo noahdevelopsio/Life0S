@@ -1,0 +1,4 @@
+# Ignore local development files
+.next
+node_modules
+*.log
