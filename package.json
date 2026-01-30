@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "next build",
+    "build": "next build --webpack",
     "start": "next start",
     "lint": "eslint"
   },
@@ -60,6 +60,7 @@
     "regenerator-runtime": "^0.14.1",
     "tailwind-merge": "^3.4.0",
     "tailwindcss-animate": "^1.0.7",
+    "web-push": "^3.6.7",
     "workbox-webpack-plugin": "^7.4.0",
     "zod": "^4.3.5",
     "zustand": "^5.0.10"
@@ -70,9 +71,12 @@
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "@types/react-speech-recognition": "^3.9.6",
+    "@types/web-push": "^3.6.4",
+    "dotenv": "^17.2.3",
     "eslint": "^9",
     "eslint-config-next": "16.1.4",
     "tailwindcss": "^4",
+    "ts-node": "^10.9.2",
     "typescript": "^5"
   }
 }
