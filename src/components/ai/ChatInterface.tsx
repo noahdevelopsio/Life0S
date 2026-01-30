@@ -1,15 +1,21 @@
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { MessageBubble } from '@/components/ai/MessageBubble';
 import { TypingIndicator } from '@/components/ai/TypingIndicator';
 import { SuggestionChips } from '@/components/ai/SuggestionChips';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Send, ArrowLeft } from 'lucide-react';
+import { supabase } from '@/lib/supabase/client';
 
-export function ChatInterface({ conversationId }: { conversationId?: string }) { // conversationId optional for now
+export function ChatInterface({ conversationId: propConversationId }: { conversationId?: string }) {
+    const router = useRouter();
+    const searchParams = useSearchParams();
+    const urlConversationId = searchParams.get('c');
+    const activeConversationId = propConversationId || urlConversationId;
+
     const [messages, setMessages] = useState<any[]>([
         { role: 'assistant', content: "Hi! I'm LifeOS. How can I support you today?" }
     ]);
@@ -22,6 +28,25 @@ export function ChatInterface({ conversationId }: { conversationId?: string }) {
     };
 
     useEffect(scrollToBottom, [messages]);
+
+    // Load conversation history
+    useEffect(() => {
+        if (!activeConversationId) return;
+
+        async function loadHistory() {
+            const { data, error } = await supabase
+                .from('messages')
+                .select('role, content')
+                .eq('conversation_id', activeConversationId)
+                .order('created_at', { ascending: true });
+
+            if (data && data.length > 0) {
+                setMessages(data);
+            }
+        }
+
+        loadHistory();
+    }, [activeConversationId]);
 
     const sendMessage = async () => {
         if (!input.trim() || isLoading) return;
@@ -36,8 +61,8 @@ export function ChatInterface({ conversationId }: { conversationId?: string }) {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
-                    messages: [...messages, userMessage], // Send history
-                    conversationId,
+                    messages: [...messages, userMessage],
+                    conversationId: activeConversationId,
                 }),
             });
 
@@ -66,6 +91,12 @@ export function ChatInterface({ conversationId }: { conversationId?: string }) {
                     if (line.startsWith('data: ')) {
                         try {
                             const data = JSON.parse(line.slice(6));
+
+                            // If API returns conversationId (new chat), update URL
+                            if (data.conversationId && !activeConversationId) {
+                                window.history.replaceState(null, '', `/ai?c=${data.conversationId}`);
+                            }
+
                             if (data.chunk) {
                                 assistantMessage += data.chunk;
 
@@ -93,8 +124,6 @@ export function ChatInterface({ conversationId }: { conversationId?: string }) {
         }
     };
 
-    const router = useRouter(); // Use the router hook
-
     return (
         <div className="flex flex-col h-[100dvh] md:h-[calc(100vh-4rem)] bg-white dark:bg-slate-900 md:bg-transparent md:dark:bg-transparent overflow-hidden relative">
             {/* Mobile Header */}
@@ -115,10 +144,20 @@ export function ChatInterface({ conversationId }: { conversationId?: string }) {
 
             {/* Messages */}
             <div className="flex-1 overflow-y-auto p-4 space-y-4 scrollbar-thin scrollbar-thumb-rounded scrollbar-thumb-slate-200 dark:scrollbar-thumb-slate-700 w-full mb-0">
-                {messages.map((msg, idx) => (
-                    <MessageBubble key={idx} message={msg} />
-                ))}
-                {isLoading && messages[messages.length - 1].content === '' && <TypingIndicator />}
+                {messages.length === 0 ? (
+                    <div className="flex h-full items-center justify-center text-slate-400">
+                        No messages yet.
+                    </div>
+                ) : (
+                    messages.map((msg, idx) => (
+                        <MessageBubble key={idx} message={msg} />
+                    ))
+                )}
+                {isLoading && (
+                    messages.length === 0 ||
+                    messages[messages.length - 1].role === 'user' ||
+                    (messages[messages.length - 1].role === 'assistant' && messages[messages.length - 1].content === '')
+                ) && <TypingIndicator />}
                 <div ref={messagesEndRef} />
             </div>
 

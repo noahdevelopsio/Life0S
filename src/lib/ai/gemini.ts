@@ -1,5 +1,5 @@
 import { GoogleGenerativeAI } from '@google/generative-ai';
-import { trackFeatureUsage } from '@/lib/opik/client';
+import { trackFeatureUsage, trackLLMCall } from '@/lib/opik/client';
 
 if (!process.env.GEMINI_API_KEY) {
     console.warn('Missing GEMINI_API_KEY environment variable');
@@ -18,7 +18,7 @@ export async function chatWithGemini(
 ) {
     try {
         const model = genAI.getGenerativeModel({
-            model: 'gemini-1.5-pro',
+            model: 'gemini-2.5-flash-lite',
             systemInstruction: systemInstruction
         });
 
@@ -38,6 +38,16 @@ export async function chatWithGemini(
         const response = await result.response;
         const text = response.text();
 
+        // Track trace
+        await trackFeatureUsage('chat_wrapper', 'system', { model: 'gemini-2.5-flash-lite' });
+        // Track LLM call details
+        await trackLLMCall({
+            input: history,
+            output: text,
+            model: 'gemini-2.5-flash-lite',
+            tags: ['chat']
+        });
+
         return {
             role: 'model',
             content: text,
@@ -54,7 +64,7 @@ export async function geminiJSON<T>(
 ): Promise<T> {
     try {
         const model = genAI.getGenerativeModel({
-            model: 'gemini-1.5-pro',
+            model: 'gemini-2.5-flash-lite',
             systemInstruction: systemInstruction,
             generationConfig: {
                 responseMimeType: "application/json",
@@ -64,6 +74,14 @@ export async function geminiJSON<T>(
         const result = await model.generateContent(prompt);
         const response = await result.response;
         const text = response.text();
+
+        // Track LLM call
+        await trackLLMCall({
+            input: [{ role: 'user', content: prompt }],
+            output: text,
+            model: 'gemini-2.5-flash-lite',
+            tags: ['json_mode']
+        });
 
         try {
             return JSON.parse(text) as T;
@@ -84,7 +102,7 @@ export async function streamGemini(
 ) {
     try {
         const model = genAI.getGenerativeModel({
-            model: 'gemini-1.5-pro',
+            model: 'gemini-2.5-flash-lite',
             systemInstruction: systemInstruction
         });
 

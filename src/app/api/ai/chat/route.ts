@@ -27,21 +27,66 @@ export async function POST(req: NextRequest) {
 
         const { messages, conversationId } = await req.json();
 
+        // Create conversation if needed
+        let activeConversationId = conversationId;
+        if (!activeConversationId) {
+            const { data: conv, error: convError } = await supabase
+                .from('conversations')
+                .insert({
+                    user_id: user.id,
+                    title: messages[messages.length - 1].content.slice(0, 40) + '...'
+                })
+                .select('id')
+                .single();
+
+            if (convError || !conv) {
+                console.error('Failed to create conversation', convError);
+                throw new Error('Failed to create conversation');
+            }
+            activeConversationId = conv.id;
+        }
+
+        // Save User Message
+        const lastUserMsg = messages[messages.length - 1];
+        const { error: msgError } = await supabase.from('messages').insert({
+            conversation_id: activeConversationId,
+            role: 'user',
+            content: lastUserMsg.content
+        });
+
+        if (msgError) console.error('Failed to save user message', msgError);
+
         // Get user context for personalization
         const userData = await getUserContext(supabase, user.id);
         const systemInstruction = COMPANION_SYSTEM_INSTRUCTION + '\n\n' + CHAT_CONTEXT_BUILDER(userData);
 
         // Stream response
         const encoder = new TextEncoder();
+        let aiResponseText = '';
+
         const stream = new ReadableStream({
             async start(controller) {
+                // Send conversation ID first so client can update URL
+                controller.enqueue(encoder.encode(`data: ${JSON.stringify({ conversationId: activeConversationId })}\n\n`));
+
                 await streamGemini(
                     messages,
                     systemInstruction,
                     (chunk) => {
+                        aiResponseText += chunk;
                         controller.enqueue(encoder.encode(`data: ${JSON.stringify({ chunk })}\n\n`));
                     }
                 );
+
+                // Save AI Message after stream completes
+                if (aiResponseText) {
+                    await supabase.from('messages').insert({
+                        conversation_id: activeConversationId,
+                        role: 'assistant',
+                        content: aiResponseText
+                    });
+                }
+
                 controller.close();
             },
         });
@@ -49,7 +94,7 @@ export async function POST(req: NextRequest) {
         // Log to Opik (non-blocking)
         opik.trace({
             name: 'ai-chat',
-            input: { messages, conversationId },
+            input: { messages, conversationId: activeConversationId },
             metadata: { userId: user.id },
         });
 

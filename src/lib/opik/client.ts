@@ -79,3 +79,33 @@ export async function trackGoalMilestone(
         },
     });
 }
+export async function trackLLMCall(
+    params: {
+        input: any[];
+        output: string;
+        model?: string;
+        metadata?: Record<string, any>;
+        tags?: string[];
+    }
+) {
+    // Console log for local verification since we can't see Opik dashboard
+    if (process.env.NODE_ENV === 'development') {
+        console.log('[Opik] Tracking LLM Call:', {
+            input: params.input.length > 0 ? `${params.input.length} messages` : 'Empty input',
+            outputPreview: params.output.substring(0, 50) + (params.output.length > 50 ? '...' : ''),
+            model: params.model
+        });
+    }
+
+    await opik.log({
+        name: 'llm_call',
+        input: { messages: params.input },
+        output: { content: params.output },
+        properties: {
+            model: params.model || 'gemini-2.5-flash-lite',
+            timestamp: new Date().toISOString(),
+            ...params.metadata,
+        },
+        tags: params.tags
+    });
+}
