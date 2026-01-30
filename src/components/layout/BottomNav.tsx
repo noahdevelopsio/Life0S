@@ -47,7 +47,7 @@ export function BottomNav() {
             </AnimatePresence>
 
             {/* Quick Actions Menu */}
-            {pathname !== '/profile' && (
+            {pathname === '/dashboard' && (
                 <div className="fixed bottom-32 right-5 z-50 md:hidden flex flex-col items-end gap-4 pointer-events-none">
                     <AnimatePresence>
                         {isMenuOpen && (
@@ -93,7 +93,7 @@ export function BottomNav() {
             )}
 
             <nav className="fixed bottom-6 left-5 right-5 z-40 md:hidden">
-                <div className="bg-white/95 dark:bg-slate-900/95 backdrop-blur-xl border border-white/20 rounded-[32px] px-2 py-2 flex justify-between items-center shadow-2xl shadow-black/5 relative">
+                <div className="bg-white/95 dark:bg-slate-900/95 backdrop-blur-xl border border-white/20 rounded-[32px] px-2 py-2 flex justify-between items-center shadow-2xl shadow-black/5 relative flex-nowrap overflow-hidden">
                     {navItems.map((item) => {
                         const active = isActive(item.href);
                         return (
@@ -101,14 +101,14 @@ export function BottomNav() {
                                 key={item.href}
                                 href={item.href}
                                 className={cn(
-                                    "transition-all duration-200 flex items-center justify-center rounded-[24px]",
+                                    "transition-all duration-200 flex items-center justify-center rounded-[24px] shrink-0",
                                     active
-                                        ? "bg-[#5A7C5F] text-white px-5 py-3 gap-2"
-                                        : "p-4 text-slate-300 dark:text-slate-600 hover:text-slate-500 dark:hover:text-slate-400"
+                                        ? "bg-[#5A7C5F] text-white px-4 py-3 gap-2"
+                                        : "p-3 text-slate-300 dark:text-slate-600 hover:text-slate-500 dark:hover:text-slate-400"
                                 )}
                             >
                                 <item.icon className={cn("transition-all", active ? "w-5 h-5" : "w-6 h-6")} />
-                                {active && <span className="text-sm font-bold">{item.label}</span>}
+                                {active && <span className="text-sm font-bold whitespace-nowrap">{item.label}</span>}
                             </Link>
                         );
                     })}

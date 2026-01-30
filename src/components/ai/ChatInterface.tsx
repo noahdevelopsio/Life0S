@@ -96,9 +96,9 @@ export function ChatInterface({ conversationId }: { conversationId?: string }) {
     const router = useRouter(); // Use the router hook
 
     return (
-        <div className="flex flex-col h-[100dvh] md:h-[calc(100vh-4rem)] bg-white dark:bg-slate-900 md:bg-transparent md:dark:bg-transparent">
+        <div className="flex flex-col h-[100dvh] md:h-[calc(100vh-4rem)] bg-white dark:bg-slate-900 md:bg-transparent md:dark:bg-transparent overflow-hidden relative">
             {/* Mobile Header */}
-            <div className="flex items-center gap-3 p-4 border-b border-slate-100 dark:border-slate-800 md:hidden bg-white dark:bg-slate-900">
+            <div className="flex-none flex items-center gap-3 p-4 border-b border-slate-100 dark:border-slate-800 md:hidden bg-white dark:bg-slate-900 z-10">
                 <Button
                     variant="ghost"
                     size="icon"
@@ -114,7 +114,7 @@ export function ChatInterface({ conversationId }: { conversationId?: string }) {
             </div>
 
             {/* Messages */}
-            <div className="flex-1 overflow-y-auto p-4 space-y-4 scrollbar-thin scrollbar-thumb-rounded scrollbar-thumb-slate-200 dark:scrollbar-thumb-slate-700">
+            <div className="flex-1 overflow-y-auto p-4 space-y-4 scrollbar-thin scrollbar-thumb-rounded scrollbar-thumb-slate-200 dark:scrollbar-thumb-slate-700 w-full mb-0">
                 {messages.map((msg, idx) => (
                     <MessageBubble key={idx} message={msg} />
                 ))}
@@ -123,10 +123,14 @@ export function ChatInterface({ conversationId }: { conversationId?: string }) {
             </div>
 
             {/* Suggestions */}
-            {!isLoading && messages.length < 3 && <SuggestionChips onSelect={(text: string) => { setInput(text); }} />}
+            {!isLoading && messages.length < 3 && (
+                <div className="flex-none px-4 pb-2">
+                    <SuggestionChips onSelect={(text: string) => { setInput(text); }} />
+                </div>
+            )}
 
             {/* Input */}
-            <div className="p-4 border-t border-gray-100 dark:border-slate-800 bg-white dark:bg-slate-900 md:rounded-2xl md:shadow-lg md:mx-4 md:mb-4">
+            <div className="flex-none p-4 border-t border-gray-100 dark:border-slate-800 bg-white dark:bg-slate-900 md:rounded-2xl md:shadow-lg md:mx-4 md:mb-4 z-10 w-full">
                 <div className="flex gap-2">
                     <Input
                         value={input}

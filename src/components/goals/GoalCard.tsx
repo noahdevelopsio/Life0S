@@ -17,9 +17,11 @@ export function GoalCard({ goal, onLogProgress }: GoalCardProps) {
         <DashboardCard className="relative overflow-hidden group">
             <div className="flex justify-between items-start mb-4">
                 <div>
-                    {goal.category_id && (
-                        <span className="text-xs font-bold text-primary px-2 py-1 bg-primary/10 rounded-md mb-2 inline-block">Category</span>
-                        // In real app fetch category name
+                    {goal.categories && (
+                        <span className="text-xs font-bold text-primary px-2 py-1 bg-primary/10 rounded-md mb-2 inline-flex items-center gap-1">
+                            {goal.categories.icon && <span>{goal.categories.icon}</span>}
+                            {goal.categories.name}
+                        </span>
                     )}
                     <h3 className="text-xl font-bold">{goal.title}</h3>
                     <p className="text-sm text-slate-500">{goal.frequency} goal</p>

@@ -21,7 +21,7 @@ export default function GoalsPage() {
     async function loadGoals() {
         const { data } = await supabase
             .from('goals')
-            .select('*')
+            .select('*, categories(*)')
             .eq('user_id', user!.id)
             .eq('status', 'active');
 
@@ -65,10 +65,10 @@ export default function GoalsPage() {
 
     return (
         <div className="max-w-7xl mx-auto p-4 md:p-6 space-y-6">
-            <div className="flex justify-between items-center">
+            <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8">
                 <div>
-                    <h1 className="text-3xl font-bold">Goals & Habits</h1>
-                    <p className="text-slate-500">Track your progress and build consistency.</p>
+                    <h1 className="text-2xl md:text-3xl font-bold text-slate-900 dark:text-white tracking-tight">Goals & Habits</h1>
+                    <p className="text-slate-500 dark:text-slate-400 mt-1">Track your progress and build consistency.</p>
                 </div>
                 <AddGoalModal onGoalCreated={loadGoals} />
             </div>
