@@ -10,70 +10,43 @@ const opikClient = process.env.OPIK_API_KEY
     })
     : null; // Graceful fallback if not configured
 
-export const opik = opikClient || {
-    // Mock interface so code doesn't break if opik is missing
-    trace: async () => { },
-    span: async () => { },
-    score: async () => { },
-    log: async () => { },
+// Safe wrapper for Opik client
+const safeOpik = {
+    trace: async (...args: any[]) => {
+        if (!opikClient) return;
+        try {
+            return await (opikClient as any).trace(...args);
+        } catch (e) {
+            // Silently fail if Opik is not configured or errors
+        }
+    },
+    span: async (...args: any[]) => {
+        if (!opikClient) return;
+        try {
+            return await (opikClient as any).span(...args);
+        } catch (e) {
+            // Silently fail
+        }
+    },
+    score: async (...args: any[]) => {
+        if (!opikClient) return;
+        try {
+            return await (opikClient as any).score(...args);
+        } catch (e) {
+            // Silently fail
+        }
+    },
+    log: async (...args: any[]) => {
+        if (!opikClient) return;
+        try {
+            return await (opikClient as any).log(...args);
+        } catch (e) {
+            // Silently fail
+        }
+    },
 } as any;
 
-// Wrapper for Gemini calls with Opik logging
-export async function geminiWithOpik(
-    operationName: string,
-    messages: any[],
-    systemInstruction: string,
-    metadata?: Record<string, any>
-) {
-    const startTime = Date.now();
-    const traceId = crypto.randomUUID();
-
-    // Start Opik trace
-    await opik.trace({
-        id: traceId,
-        name: operationName,
-        input: {
-            messages,
-            systemInstruction,
-            model: 'gemini-1.5-pro'
-        },
-        metadata: {
-            ...metadata,
-            timestamp: new Date().toISOString(),
-        },
-    });
-
-    try {
-        const response = await chatWithGemini(messages, systemInstruction);
-        const duration = Date.now() - startTime;
-
-        // Log successful completion
-        await opik.span({
-            traceId,
-            name: `\${operationName}-completion`,
-            input: messages[messages.length - 1],
-            output: response,
-            metadata: {
-                duration,
-                success: true,
-                tokensEstimate: response.content.length / 4,
-            },
-        });
-
-        return response;
-    } catch (error: any) {
-        // Log error
-        await opik.span({
-            traceId,
-            name: `\${operationName}-error`,
-            metadata: {
-                error: error.message,
-                success: false,
-            },
-        });
-        throw error;
-    }
-}
+export const opik = safeOpik;
 
 export async function trackFeatureUsage(
     featureName: string,

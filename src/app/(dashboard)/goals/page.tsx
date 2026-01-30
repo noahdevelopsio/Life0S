@@ -6,6 +6,7 @@ import { useUser } from '@/lib/hooks/useUser';
 import { GoalCard } from '@/components/goals/GoalCard';
 import { AddGoalModal } from '@/components/goals/AddGoalModal';
 import { trackGoalMilestoneAction } from '@/actions/tracking';
+import { Spinner } from '@/components/ui/spinner';
 
 export default function GoalsPage() {
     const { user } = useUser();
@@ -74,7 +75,9 @@ export default function GoalsPage() {
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {loading ? (
-                    <div>Loading goals...</div>
+                    <div className="col-span-full flex justify-center py-12">
+                        <Spinner />
+                    </div>
                 ) : goals.length === 0 ? (
                     <div className="col-span-full text-center py-12 text-slate-500 bg-slate-50 rounded-xl">
                         No active goals. Create one to get started!

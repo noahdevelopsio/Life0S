@@ -26,21 +26,83 @@ export default function ProfilePage() {
     useEffect(() => {
         if (!user) return;
 
-        // Mock data fetching or simple logic for now to show the UI immediately
         async function fetchStats() {
-            // In a real implementation, we would query the DB here
-            // const { data: entries } = await supabase.from('entries')...
+            setLoadingStats(true);
+            try {
+                const today = new Date();
+                const sevenDaysAgo = new Date();
+                sevenDaysAgo.setDate(today.getDate() - 7);
+                const sevenDaysAgoStr = sevenDaysAgo.toISOString().split('T')[0];
 
-            // Simulating network delay for realism
-            setTimeout(() => {
+                // 1. Fetch entries for streak & weekly stats
+                const { data: entries } = await supabase
+                    .from('entries')
+                    .select('entry_date')
+                    .eq('user_id', user!.id)
+                    .order('entry_date', { ascending: false });
+
+                // 2. Fetch completed goals
+                const { count: goalsHitCount } = await supabase
+                    .from('goals')
+                    .select('*', { count: 'exact', head: true })
+                    .eq('user_id', user!.id)
+                    .gte('current_value', 100); // Assuming 100% or logic matches goal completion. 
+                // Actually, let's fix this based on how goals are tracked. 
+                // Re-reading previous context: goals have current_value and target_value.
+                // We need to fetch and compare.
+
+                const { data: allGoals } = await supabase
+                    .from('goals')
+                    .select('current_value, target_value')
+                    .eq('user_id', user!.id);
+
+                const actualGoalsHit = allGoals?.filter(g => (g.current_value || 0) >= (g.target_value || 1)).length || 0;
+
+                // Calculate Weekly Entries
+                const weeklyEntriesCount = entries?.filter(e => e.entry_date >= sevenDaysAgoStr).length || 0;
+
+                // Calculate Streak
+                let currentStreak = 0;
+                if (entries && entries.length > 0) {
+                    const uniqueDates = Array.from(new Set(entries.map(e => e.entry_date))).sort().reverse();
+
+                    // Check if the most recent entry is today or yesterday
+                    const todayStr = new Date().toISOString().split('T')[0];
+                    const yesterday = new Date();
+                    yesterday.setDate(yesterday.getDate() - 1);
+                    const yesterdayStr = yesterday.toISOString().split('T')[0];
+
+                    if (uniqueDates[0] === todayStr || uniqueDates[0] === yesterdayStr) {
+                        currentStreak = 1;
+                        let checkDate = new Date(uniqueDates[0]);
+
+                        for (let i = 1; i < uniqueDates.length; i++) {
+                            checkDate.setDate(checkDate.getDate() - 1);
+                            const expectedDate = checkDate.toISOString().split('T')[0];
+                            if (uniqueDates[i] === expectedDate) {
+                                currentStreak++;
+                            } else {
+                                break;
+                            }
+                        }
+                    }
+                }
+
+                // Calculate Consistency (Simple metric: entries this week / 7 days * 100, capped at 100)
+                const consistencyScore = Math.min(Math.round((weeklyEntriesCount / 7) * 100), 100);
+
                 setStats({
-                    streak: 8,
-                    weeklyEntries: 12,
-                    goalsHit: 3,
-                    consistency: 85
+                    streak: currentStreak,
+                    weeklyEntries: weeklyEntriesCount,
+                    goalsHit: actualGoalsHit,
+                    consistency: consistencyScore
                 });
+
+            } catch (error) {
+                console.error('Error fetching profile stats:', error);
+            } finally {
                 setLoadingStats(false);
-            }, 500);
+            }
         }
 
         fetchStats();

@@ -18,7 +18,7 @@ export async function chatWithGemini(
 ) {
     try {
         const model = genAI.getGenerativeModel({
-            model: 'gemini-1.5-flash',
+            model: 'gemini-1.5-pro',
             systemInstruction: systemInstruction
         });
 
@@ -54,7 +54,7 @@ export async function geminiJSON<T>(
 ): Promise<T> {
     try {
         const model = genAI.getGenerativeModel({
-            model: 'gemini-1.5-flash',
+            model: 'gemini-1.5-pro',
             systemInstruction: systemInstruction,
             generationConfig: {
                 responseMimeType: "application/json",
@@ -84,16 +84,21 @@ export async function streamGemini(
 ) {
     try {
         const model = genAI.getGenerativeModel({
-            model: 'gemini-1.5-flash',
+            model: 'gemini-1.5-pro',
             systemInstruction: systemInstruction
         });
 
         // Convert typical message format {role, content} to Gemini history
-        // Assuming messages are in a standard format
-        const history = messages.slice(0, -1).map(msg => ({
+        // Gemini requires the first message in history to be from 'user'
+        let history = messages.slice(0, -1).map(msg => ({
             role: msg.role === 'assistant' || msg.role === 'model' ? 'model' : 'user',
             parts: [{ text: msg.content || '' }],
         }));
+
+        // Remove leading model messages if any
+        while (history.length > 0 && history[0].role === 'model') {
+            history.shift();
+        }
 
         const lastMsg = messages[messages.length - 1];
         const lastMsgContent = lastMsg.content || '';

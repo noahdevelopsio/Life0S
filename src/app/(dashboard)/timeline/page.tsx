@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { createClient } from '@/lib/supabase/client'
-import { useUserStore } from '@/store/userStore'
+import { useUser } from '@/lib/hooks/useUser'
 import { Calendar, Smile, Meh, Frown, Star, Frown as FrownIcon } from 'lucide-react';
 import { Spinner } from '@/components/ui/spinner';
 
@@ -33,16 +33,18 @@ export default function TimelinePage() {
   const [selectedTag, setSelectedTag] = useState<string | null>(null)
   const [selectedMood, setSelectedMood] = useState<string | null>(null)
   const [searchQuery, setSearchQuery] = useState('')
-  const [loading, setLoading] = useState(true)
+  const [entriesLoading, setEntriesLoading] = useState(true)
 
-  const { user } = useUserStore()
+  const { user, loading: authLoading } = useUser()
   const supabase = createClient()
 
   useEffect(() => {
     if (user) {
       loadEntries()
+    } else if (!authLoading) {
+      setEntriesLoading(false)
     }
-  }, [user])
+  }, [user, authLoading])
 
   useEffect(() => {
     filterEntries()
@@ -51,7 +53,7 @@ export default function TimelinePage() {
   const loadEntries = async () => {
     if (!user) return
 
-    setLoading(true)
+    setEntriesLoading(true)
     const { data } = await supabase
       .from('entries')
       .select('*')
@@ -59,7 +61,7 @@ export default function TimelinePage() {
       .order('entry_date', { ascending: false })
 
     setEntries(data || [])
-    setLoading(false)
+    setEntriesLoading(false)
   }
 
   const filterEntries = () => {
@@ -87,16 +89,7 @@ export default function TimelinePage() {
     setFilteredEntries(filtered)
   }
 
-  const getMoodEmoji = (mood: string | null) => {
-    switch (mood) {
-      case 'great': return '😊'
-      case 'good': return '🙂'
-      case 'okay': return '😐'
-      case 'bad': return '😔'
-      case 'terrible': return '😢'
-      default: return '📝'
-    }
-  }
+
 
   const allTags = Array.from(
     new Set(entries.flatMap(entry => entry.tags || []))
@@ -106,7 +99,7 @@ export default function TimelinePage() {
     new Set(entries.map(entry => entry.mood).filter((mood): mood is string => mood !== null))
   ).sort()
 
-  if (loading) {
+  if (authLoading || entriesLoading) {
     return (
       <div className="min-h-screen bg-background-light dark:bg-background-dark flex items-center justify-center">
         <Spinner />
@@ -140,7 +133,7 @@ export default function TimelinePage() {
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder="Search your thoughts..."
-                className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 rounded-lg text-slate-900 dark:text-white"
+                className="flex h-11 w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-4 py-2 text-sm text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-none focus:border-primary focus:ring-4 focus:ring-primary/10 transition-all duration-200 shadow-sm"
               />
             </div>
 
@@ -149,16 +142,23 @@ export default function TimelinePage() {
               <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
                 Filter by tag
               </label>
-              <select
-                value={selectedTag || ''}
-                onChange={(e) => setSelectedTag(e.target.value || null)}
-                className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 rounded-lg text-slate-900 dark:text-white"
-              >
-                <option value="">All tags</option>
-                {allTags.map(tag => (
-                  <option key={tag} value={tag}>#{tag}</option>
-                ))}
-              </select>
+              <div className="relative">
+                <select
+                  value={selectedTag || ''}
+                  onChange={(e) => setSelectedTag(e.target.value || null)}
+                  className="flex h-11 w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-4 py-2 text-sm text-slate-900 dark:text-white focus:outline-none focus:border-primary focus:ring-4 focus:ring-primary/10 transition-all duration-200 shadow-sm appearance-none cursor-pointer"
+                >
+                  <option value="">All tags</option>
+                  {allTags.map(tag => (
+                    <option key={tag} value={tag}>#{tag}</option>
+                  ))}
+                </select>
+                <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-slate-500">
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                  </svg>
+                </div>
+              </div>
             </div>
 
             {/* Mood Filter */}
@@ -166,18 +166,25 @@ export default function TimelinePage() {
               <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
                 Filter by mood
               </label>
-              <select
-                value={selectedMood || ''}
-                onChange={(e) => setSelectedMood(e.target.value === '' ? null : e.target.value)}
-                className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 rounded-lg text-slate-900 dark:text-white"
-              >
-                <option value="">All moods</option>
-                {allMoods.map(mood => (
-                  <option key={mood} value={mood}>
-                    {getMoodEmoji(mood)} {mood}
-                  </option>
-                ))}
-              </select>
+              <div className="relative">
+                <select
+                  value={selectedMood || ''}
+                  onChange={(e) => setSelectedMood(e.target.value === '' ? null : e.target.value)}
+                  className="flex h-11 w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-4 py-2 text-sm text-slate-900 dark:text-white focus:outline-none focus:border-primary focus:ring-4 focus:ring-primary/10 transition-all duration-200 shadow-sm appearance-none cursor-pointer"
+                >
+                  <option value="">All moods</option>
+                  {allMoods.map(mood => (
+                    <option key={mood} value={mood}>
+                      {mood}
+                    </option>
+                  ))}
+                </select>
+                <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-slate-500">
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                  </svg>
+                </div>
+              </div>
             </div>
           </div>
 
@@ -198,7 +205,7 @@ export default function TimelinePage() {
               )}
               {selectedMood && (
                 <span className="inline-flex items-center px-2 py-1 rounded-full text-xs bg-primary/10 text-primary">
-                  {getMoodEmoji(selectedMood)} {selectedMood}
+                  {selectedMood}
                   <button
                     onClick={() => setSelectedMood(null)}
                     className="ml-1 text-primary hover:text-primary/80"

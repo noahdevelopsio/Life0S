@@ -51,7 +51,7 @@ export async function POST(req: NextRequest) {
             name: 'ai-chat',
             input: { messages, conversationId },
             metadata: { userId: user.id },
-        }).catch(console.error);
+        });
 
         return new NextResponse(stream, {
             headers: {

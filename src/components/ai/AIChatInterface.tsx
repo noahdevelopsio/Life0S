@@ -2,6 +2,7 @@
 
 import { useState, useRef, useEffect } from 'react'
 import { GeminiMessage } from '@/lib/ai/gemini'
+import { Bot, MessageCircle } from 'lucide-react'
 
 interface AIChatInterfaceProps {
   messages: GeminiMessage[]
@@ -45,7 +46,7 @@ export default function AIChatInterface({
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-4">
             <div className="w-10 h-10 bg-primary/10 rounded-full flex items-center justify-center">
-              <span className="text-lg">🤖</span>
+              <Bot className="w-6 h-6 text-primary" />
             </div>
             <div>
               <h1 className="text-lg font-semibold text-slate-900 dark:text-white">
@@ -64,7 +65,7 @@ export default function AIChatInterface({
         {messages.length === 0 ? (
           <div className="flex flex-col items-center justify-center h-full text-center space-y-6">
             <div className="w-20 h-20 bg-primary/10 rounded-full flex items-center justify-center">
-              <span className="text-3xl">💭</span>
+              <MessageCircle className="w-10 h-10 text-primary" />
             </div>
             <div>
               <h2 className="text-xl font-semibold text-slate-900 dark:text-white mb-2">
@@ -132,26 +133,27 @@ export default function AIChatInterface({
 
       {/* Input */}
       <div className="bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-700 px-6 py-4">
-        <form onSubmit={handleSubmit} className="flex space-x-3">
-          <input
-            ref={inputRef}
-            type="text"
-            value={inputValue}
-            onChange={(e) => setInputValue(e.target.value)}
-            placeholder="Ask me anything..."
-            className="flex-1 px-4 py-3 border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 rounded-lg text-slate-900 dark:text-white placeholder-slate-400 focus:border-primary focus:ring-2 focus:ring-primary/50"
-            disabled={isLoading}
-          />
-          <button
-            type="submit"
-            disabled={!inputValue.trim() || isLoading}
-            className="px-6 py-3 bg-primary text-white rounded-lg font-medium hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center space-x-2"
-          >
-            <span>Send</span>
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
-            </svg>
-          </button>
+        <form onSubmit={handleSubmit} className="flex space-x-3 items-center max-w-4xl mx-auto">
+          <div className="relative flex-1">
+            <input
+              ref={inputRef}
+              type="text"
+              value={inputValue}
+              onChange={(e) => setInputValue(e.target.value)}
+              placeholder="Ask me anything..."
+              className="w-full pl-5 pr-12 py-3.5 border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 rounded-full text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:border-primary focus:ring-4 focus:ring-primary/10 transition-all shadow-sm"
+              disabled={isLoading}
+            />
+            <button
+              type="submit"
+              disabled={!inputValue.trim() || isLoading}
+              className="absolute right-2 top-1/2 -translate-y-1/2 p-2 bg-primary text-white rounded-full hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-md hover:scale-105 active:scale-95"
+            >
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
+              </svg>
+            </button>
+          </div>
         </form>
       </div>
     </div>

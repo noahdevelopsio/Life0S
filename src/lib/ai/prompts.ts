@@ -83,10 +83,10 @@ export const CHAT_CONTEXT_BUILDER = (userData: {
 Current user context:
 
 Recent Journal Entries (last 7 days):
-\${userData.recentEntries.map(e => \`- \${e.entry_date}: \${e.content.substring(0, 100)}...\`).join('\\n')}
+\${userData.recentEntries.map(e => \`- \${e.entry_date}: \${(e.content || '').substring(0, 100)}...\`).join('\\n')}
 
 Active Goals:
-\${userData.activeGoals.map(g => \`- \${g.title} (\${g.frequency}): \${g.current_value}/\${g.target_value}, Streak: \${g.streak} days\`).join('\\n')}
+\${userData.activeGoals.map(g => \`- \${g.title} (\${g.frequency}): \${g.current_value || 0}/\${g.target_value || 0}, Streak: \${g.streak || 0} days\`).join('\\n')}
 
 This Week's Stats:
 - Total entries: \${userData.weeklyStats.totalEntries}

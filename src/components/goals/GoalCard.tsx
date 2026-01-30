@@ -2,7 +2,7 @@
 
 import { DashboardCard } from '@/components/dashboard/DashboardCard';
 import { Button } from '@/components/ui/button';
-import { Plus, ChevronRight, CheckCircle2, Circle } from 'lucide-react';
+import { Plus, ChevronRight, CheckCircle2, Circle, Flame } from 'lucide-react';
 import Link from 'next/link';
 
 interface GoalCardProps {
@@ -47,7 +47,9 @@ export function GoalCard({ goal, onLogProgress }: GoalCardProps) {
             </div>
 
             <div className="mt-6 flex items-center gap-2 text-sm text-slate-500">
-                <span className="font-semibold text-orange-500">🔥 {goal.streak} day streak</span>
+                <span className="font-semibold text-orange-500 flex items-center gap-1">
+                    <Flame className="w-4 h-4" /> {goal.streak} day streak
+                </span>
             </div>
         </DashboardCard>
     );

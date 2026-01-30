@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { useRouter, usePathname } from 'next/navigation';
 import { cn } from '@/lib/utils';
-import { Home, Book, Flag, Sparkles, BookOpen, Calendar, Settings, LogOut, Sun, Moon, User as UserIcon } from 'lucide-react';
+import { Home, Book, Flag, Sparkles, BookOpen, Calendar, Settings, LogOut, Sun, Moon, User as UserIcon, MessageCircle } from 'lucide-react';
 import { useUser } from '@/lib/hooks/useUser';
 import { useThemeStore } from '@/store/themeStore';
 
@@ -24,7 +24,7 @@ export function Sidebar() {
         { icon: Book, label: 'Journal', href: '/journal' },
         { icon: Flag, label: 'Goals', href: '/goals' },
         { icon: Calendar, label: 'Timeline', href: '/timeline' },
-        { icon: Sparkles, label: 'AI Companion', href: '/ai' },
+        { icon: MessageCircle, label: 'AI Companion', href: '/ai' },
         { icon: BookOpen, label: 'Reflections', href: '/reflections' },
     ];
 

@@ -1,12 +1,13 @@
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
-import { MessageBubble } from './MessageBubble';
-import { TypingIndicator } from './TypingIndicator';
-import { SuggestionChips } from './SuggestionChips';
+import { useRouter } from 'next/navigation';
+import { MessageBubble } from '@/components/ai/MessageBubble';
+import { TypingIndicator } from '@/components/ai/TypingIndicator';
+import { SuggestionChips } from '@/components/ai/SuggestionChips';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Send } from 'lucide-react';
+import { Send, ArrowLeft } from 'lucide-react';
 
 export function ChatInterface({ conversationId }: { conversationId?: string }) { // conversationId optional for now
     const [messages, setMessages] = useState<any[]>([
@@ -39,6 +40,11 @@ export function ChatInterface({ conversationId }: { conversationId?: string }) {
                     conversationId,
                 }),
             });
+
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.error || 'Failed to fetch response');
+            }
 
             if (!response.body) throw new Error('No response body');
 
@@ -87,8 +93,26 @@ export function ChatInterface({ conversationId }: { conversationId?: string }) {
         }
     };
 
+    const router = useRouter(); // Use the router hook
+
     return (
-        <div className="flex flex-col h-[calc(100vh-140px)] md:h-[calc(100vh-100px)]">
+        <div className="flex flex-col h-[100dvh] md:h-[calc(100vh-4rem)] bg-white dark:bg-slate-900 md:bg-transparent md:dark:bg-transparent">
+            {/* Mobile Header */}
+            <div className="flex items-center gap-3 p-4 border-b border-slate-100 dark:border-slate-800 md:hidden bg-white dark:bg-slate-900">
+                <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => router.back()}
+                    className="-ml-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full"
+                >
+                    <ArrowLeft className="w-6 h-6 text-slate-700 dark:text-slate-200" />
+                </Button>
+                <div>
+                    <h1 className="font-semibold text-lg">LifeOS AI</h1>
+                    <p className="text-xs text-slate-500">Always here for you</p>
+                </div>
+            </div>
+
             {/* Messages */}
             <div className="flex-1 overflow-y-auto p-4 space-y-4 scrollbar-thin scrollbar-thumb-rounded scrollbar-thumb-slate-200 dark:scrollbar-thumb-slate-700">
                 {messages.map((msg, idx) => (
@@ -99,24 +123,24 @@ export function ChatInterface({ conversationId }: { conversationId?: string }) {
             </div>
 
             {/* Suggestions */}
-            {!isLoading && messages.length < 3 && <SuggestionChips onSelect={(text) => { setInput(text); }} />}
+            {!isLoading && messages.length < 3 && <SuggestionChips onSelect={(text: string) => { setInput(text); }} />}
 
             {/* Input */}
-            <div className="p-4 border-t border-gray-100 dark:border-slate-800 bg-white dark:bg-slate-900 mx-4 mb-4 rounded-2xl shadow-lg">
+            <div className="p-4 border-t border-gray-100 dark:border-slate-800 bg-white dark:bg-slate-900 md:rounded-2xl md:shadow-lg md:mx-4 md:mb-4">
                 <div className="flex gap-2">
                     <Input
                         value={input}
                         onChange={(e) => setInput(e.target.value)}
                         onKeyPress={(e) => e.key === 'Enter' && sendMessage()}
                         placeholder="Ask LifeOS anything..."
-                        className="flex-1 border-0 bg-transparent focus-visible:ring-0 px-0"
+                        className="flex-1 border-0 bg-slate-50 dark:bg-slate-800/50 focus-visible:ring-0 px-4 rounded-xl"
                         autoFocus
                     />
                     <Button
                         onClick={sendMessage}
                         disabled={!input.trim() || isLoading}
                         size="icon"
-                        className="rounded-full bg-primary h-10 w-10 shrink-0"
+                        className="rounded-full bg-primary h-10 w-10 shrink-0 shadow-sm"
                     >
                         <Send className="h-4 w-4" />
                     </Button>
