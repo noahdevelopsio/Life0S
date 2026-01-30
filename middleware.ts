@@ -44,6 +44,11 @@ export async function middleware(request: NextRequest) {
     return NextResponse.redirect(new URL('/login', request.url))
   }
 
+  // Redirect root to dashboard (for authenticated users) or login (for guests)
+  if (request.nextUrl.pathname === '/') {
+    return NextResponse.redirect(new URL(user ? '/dashboard' : '/login', request.url))
+  }
+
   // Redirect authenticated users away from auth pages
   if ((request.nextUrl.pathname.startsWith('/login') ||
     request.nextUrl.pathname.startsWith('/signup')) && user) {
