@@ -1,5 +1,4 @@
 import { Opik } from 'opik';
-import { chatWithGemini } from '@/lib/ai/gemini';
 
 // Initialize Opik only if API key is present to avoid errors during build/dev without keys
 // In a real app we might want strict checks

@@ -1,5 +1,4 @@
 import { GoogleGenerativeAI } from '@google/generative-ai';
-import { trackFeatureUsage, trackLLMCall } from '@/lib/opik/client';
 
 if (!process.env.GEMINI_API_KEY) {
     console.warn('Missing GEMINI_API_KEY environment variable');
@@ -38,15 +37,8 @@ export async function chatWithGemini(
         const response = await result.response;
         const text = response.text();
 
-        // Track trace
-        await trackFeatureUsage('chat_wrapper', 'system', { model: 'gemini-2.5-flash-lite' });
-        // Track LLM call details
-        await trackLLMCall({
-            input: history,
-            output: text,
-            model: 'gemini-2.5-flash-lite',
-            tags: ['chat']
-        });
+        // Note: Opik tracing should be done in API routes, not here
+        // to avoid pulling Node.js modules into client bundles
 
         return {
             role: 'model',
@@ -75,13 +67,7 @@ export async function geminiJSON<T>(
         const response = await result.response;
         const text = response.text();
 
-        // Track LLM call
-        await trackLLMCall({
-            input: [{ role: 'user', content: prompt }],
-            output: text,
-            model: 'gemini-2.5-flash-lite',
-            tags: ['json_mode']
-        });
+        // Note: Opik tracing should be done in API routes, not here
 
         try {
             return JSON.parse(text) as T;
