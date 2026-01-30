@@ -30,7 +30,7 @@ function JournalEditorWrapper() {
 
       await trackFeatureUsageAction('journal_entry_created', user.id);
 
-      router.push('/dashboard/journal');
+      router.push('/journal');
       router.refresh();
     } catch (error) {
       console.error('Error saving entry:', error);

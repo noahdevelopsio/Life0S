@@ -42,7 +42,7 @@ export function QuickEntryWidget({ onEntryCreated }: { onEntryCreated: () => voi
         if (listening) {
             SpeechRecognition.stopListening();
         }
-        router.push(`/dashboard/journal/new?initial=${encodeURIComponent(content)}`);
+        router.push(`/journal/new?initial=${encodeURIComponent(content)}`);
     };
 
     if (!isMounted) return null;
@@ -63,8 +63,8 @@ export function QuickEntryWidget({ onEntryCreated }: { onEntryCreated: () => voi
                         <button
                             onClick={toggleListening}
                             className={`w-11 h-11 rounded-full flex items-center justify-center shadow-lg transition-all hover:scale-105 ${listening
-                                    ? 'bg-red-500 text-white ring-4 ring-red-300/30'
-                                    : 'bg-white text-primary'
+                                ? 'bg-red-500 text-white ring-4 ring-red-300/30'
+                                : 'bg-white text-primary'
                                 }`}
                         >
                             {listening ? <MicOff className="w-6 h-6" /> : <Mic className="w-6 h-6" />}

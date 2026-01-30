@@ -11,7 +11,7 @@ export function GoalsOverview({ goals }: { goals: any[] }) {
                 {goals.length === 0 ? (
                     <div className="text-center py-6">
                         <p className="text-slate-400 text-sm mb-4">No active goals yet.</p>
-                        <Link href="/dashboard/goals" className="text-primary font-semibold text-sm">
+                        <Link href="/goals" className="text-primary font-semibold text-sm">
                             + Create a Goal
                         </Link>
                     </div>
