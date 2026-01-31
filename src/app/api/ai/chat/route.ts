@@ -105,20 +105,22 @@ export async function POST(req: NextRequest) {
                         });
                     }
 
-                    // Run evaluations (non-blocking)
-                    evaluateOverallQuality(traceId, fullResponse, {
-                        userName: userData.userName,
-                        activeGoals: userData.activeGoals,
-                        currentStreak: userData.currentStreak,
-                        preferredCategories: [],
-                    }).catch(err => console.error('[Opik] Evaluation error:', err));
-
-                    // Track performance metrics (non-blocking)
-                    trackPerformanceMetrics(traceId, 'ai-chat', {
+                    // Run evaluations and save to Supabase (non-blocking)
+                    const { evaluateAndSave } = await import('@/lib/opik/evaluators');
+                    evaluateAndSave({
+                        traceId,
+                        userId: user.id,
+                        operation: 'ai-chat-conversation',
+                        aiResponse: fullResponse,
                         duration,
-                        totalTokens,
-                        model: 'gemini-2.5-flash-lite',
-                    }).catch(err => console.error('[Opik] Performance tracking error:', err));
+                        tokens: totalTokens,
+                        userContext: {
+                            userName: userData.userName,
+                            activeGoals: userData.activeGoals,
+                            currentStreak: userData.currentStreak,
+                            preferredCategories: [],
+                        },
+                    }).catch(err => console.error('[Opik] evaluateAndSave error:', err));
 
                     // Send completion with traceId for feedback collection
                     controller.enqueue(encoder.encode(`data: ${JSON.stringify({

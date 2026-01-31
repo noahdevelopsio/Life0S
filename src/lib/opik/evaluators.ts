@@ -194,7 +194,13 @@ export async function evaluateOverallQuality(
         currentStreak?: number;
         preferredCategories?: string[];
     }
-): Promise<number> {
+): Promise<{
+    overall: number;
+    supportiveness: number;
+    actionability: number;
+    personalization: number;
+    length: number;
+}> {
     // Run all evaluations in parallel
     const [supportiveness, actionability, personalization, lengthScore] = await Promise.all([
         evaluateSupportiveness(traceId, aiResponse),
@@ -231,5 +237,67 @@ export async function evaluateOverallQuality(
         },
     });
 
-    return overallScore;
+    return {
+        overall: overallScore,
+        supportiveness,
+        actionability,
+        personalization,
+        length: lengthScore,
+    };
 }
+
+/**
+ * Evaluate and save to Supabase for the metrics dashboard
+ * This is the main entry point for evaluation with persistence
+ */
+export async function evaluateAndSave(params: {
+    traceId: string;
+    userId: string;
+    operation: string;
+    aiResponse: string;
+    duration: number;
+    tokens: number;
+    userContext: {
+        userName?: string;
+        activeGoals?: Array<{ title: string }>;
+        currentStreak?: number;
+        preferredCategories?: string[];
+    };
+}): Promise<void> {
+    try {
+        // Run evaluations
+        const scores = await evaluateOverallQuality(
+            params.traceId,
+            params.aiResponse,
+            params.userContext
+        );
+
+        // Calculate estimated cost (Gemini pricing)
+        const estimatedCost = (params.tokens / 1_000_000) * 0.30; // ~$0.30 per 1M tokens
+
+        // Save to Supabase (dynamic import to avoid circular deps in some envs)
+        const { saveEvaluation } = await import('./metrics-storage');
+
+        await saveEvaluation({
+            traceId: params.traceId,
+            userId: params.userId,
+            operation: params.operation,
+            scores: {
+                supportiveness: scores.supportiveness,
+                actionability: scores.actionability,
+                personalization: scores.personalization,
+                length: scores.length,
+                overall: scores.overall,
+            },
+            performance: {
+                duration: params.duration,
+                tokens: params.tokens,
+                cost: estimatedCost,
+            },
+        });
+    } catch (error) {
+        console.error('[Opik] evaluateAndSave error:', error);
+        // Don't throw - evaluation failures shouldn't break the chat
+    }
+}
+

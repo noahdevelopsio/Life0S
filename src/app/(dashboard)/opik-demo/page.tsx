@@ -108,31 +108,46 @@ function StatsCard({
 }
 
 export default function OpikDemoPage() {
-    // Simulated metrics (in production, these would come from Opik API)
-    const [metrics] = useState({
-        qualityScores: {
-            supportiveness: 0.87,
-            actionability: 0.73,
-            personalization: 0.65,
-            overallQuality: 0.78,
-        },
-        usage: {
-            totalChats: 142,
-            totalSummarizations: 89,
-            avgResponseTime: 1.8,
-            estimatedCost: 2.34,
-        },
-        feedback: {
-            thumbsUp: 124,
-            thumbsDown: 18,
-            satisfactionRate: 0.87,
-        },
-        performance: {
-            avgDuration: 1847,
-            avgTokens: 542,
-            slowResponses: 3,
+    const [metrics, setMetrics] = useState<any>(null);
+    const [isLoading, setIsLoading] = useState(true);
+    const [isDemo, setIsDemo] = useState(false);
+
+    useEffect(() => {
+        async function fetchMetrics() {
+            try {
+                const response = await fetch('/api/opik/metrics');
+                const data = await response.json();
+                setMetrics(data);
+                setIsDemo(data.isDemo || data.totalEvaluations === 0);
+            } catch (error) {
+                console.error('Failed to fetch metrics:', error);
+                // Fallback to demo data
+                setMetrics({
+                    qualityScores: { supportiveness: 0.87, actionability: 0.73, personalization: 0.65, overallQuality: 0.78 },
+                    usage: { totalChats: 142, totalSummarizations: 89, avgResponseTime: 1.8, estimatedCost: 2.34 },
+                    feedback: { thumbsUp: 124, thumbsDown: 18, satisfactionRate: 0.87 },
+                    performance: { avgDuration: 1847, avgTokens: 542, slowResponses: 3 },
+                });
+                setIsDemo(true);
+            } finally {
+                setIsLoading(false);
+            }
         }
-    });
+        fetchMetrics();
+    }, []);
+
+    if (isLoading) {
+        return (
+            <div className="max-w-7xl mx-auto p-6 flex items-center justify-center min-h-[60vh]">
+                <div className="text-center space-y-4">
+                    <div className="animate-spin h-8 w-8 border-4 border-primary border-t-transparent rounded-full mx-auto"></div>
+                    <p className="text-slate-500">Loading metrics...</p>
+                </div>
+            </div>
+        );
+    }
+
+    if (!metrics) return null;
 
     const feedbackTotal = metrics.feedback.thumbsUp + metrics.feedback.thumbsDown;
 
@@ -370,9 +385,15 @@ export default function OpikDemoPage() {
                 <p>
                     Powered by <strong>Opik</strong> — AI Observability for the Modern Stack
                 </p>
-                <p className="text-xs mt-1">
-                    Data shown is simulated. Connect to Opik dashboard for live metrics.
-                </p>
+                {isDemo ? (
+                    <p className="text-xs mt-1 text-amber-600">
+                        ⚠️ Showing demo data. Use the AI chat to generate real metrics.
+                    </p>
+                ) : (
+                    <p className="text-xs mt-1 text-green-600">
+                        ✅ Showing real data from your LifeOS conversations.
+                    </p>
+                )}
             </div>
         </div>
     );

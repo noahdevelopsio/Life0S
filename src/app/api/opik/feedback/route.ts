@@ -51,19 +51,9 @@ export async function POST(req: NextRequest) {
             },
         });
 
-        // Optionally store in Supabase for local analytics
-        // Check if ai_feedback table exists first (graceful failure)
-        try {
-            await supabase.from('ai_feedback').insert({
-                trace_id: traceId,
-                user_id: user.id,
-                feedback_type: feedback,
-                comment: comment || null,
-            });
-        } catch (dbError) {
-            // Table might not exist - that's okay, Opik has the feedback
-            console.log('[Feedback] Supabase storage skipped (table may not exist)');
-        }
+        // Save to Supabase for metrics dashboard
+        const { saveFeedback } = await import('@/lib/opik/metrics-storage');
+        await saveFeedback(traceId, user.id, feedback, comment);
 
         return NextResponse.json({ success: true });
     } catch (error) {
