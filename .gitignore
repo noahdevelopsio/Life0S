@@ -118,3 +118,5 @@ temp/
 
 # LifeOS specific
 UI-DESIGN/
+public/sw.js
+

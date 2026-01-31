@@ -3,6 +3,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { MessageBubble } from '@/components/ai/MessageBubble';
+import { MessageFeedback } from '@/components/ai/MessageFeedback';
 import { TypingIndicator } from '@/components/ai/TypingIndicator';
 import { SuggestionChips } from '@/components/ai/SuggestionChips';
 import { Button } from '@/components/ui/button';
@@ -10,13 +11,19 @@ import { Input } from '@/components/ui/input';
 import { Send, ArrowLeft } from 'lucide-react';
 import { supabase } from '@/lib/supabase/client';
 
+type Message = {
+    role: 'user' | 'assistant';
+    content: string;
+    traceId?: string;  // For Opik feedback
+};
+
 export function ChatInterface({ conversationId: propConversationId }: { conversationId?: string }) {
     const router = useRouter();
     const searchParams = useSearchParams();
     const urlConversationId = searchParams.get('c');
     const activeConversationId = propConversationId || urlConversationId;
 
-    const [messages, setMessages] = useState<any[]>([
+    const [messages, setMessages] = useState<Message[]>([
         { role: 'assistant', content: "Hi! I'm LifeOS. How can I support you today?" }
     ]);
     const [input, setInput] = useState('');
@@ -41,7 +48,7 @@ export function ChatInterface({ conversationId: propConversationId }: { conversa
                 .order('created_at', { ascending: true });
 
             if (data && data.length > 0) {
-                setMessages(data);
+                setMessages(data as Message[]);
             }
         }
 
@@ -51,7 +58,7 @@ export function ChatInterface({ conversationId: propConversationId }: { conversa
     const sendMessage = async () => {
         if (!input.trim() || isLoading) return;
 
-        const userMessage = { role: 'user', content: input };
+        const userMessage: Message = { role: 'user', content: input };
         setMessages(prev => [...prev, userMessage]);
         setInput('');
         setIsLoading(true);
@@ -79,6 +86,7 @@ export function ChatInterface({ conversationId: propConversationId }: { conversa
             const reader = response.body.getReader();
             const decoder = new TextDecoder();
             let assistantMessage = '';
+            let currentTraceId = '';
 
             while (true) {
                 const { done, value } = await reader.read();
@@ -95,6 +103,23 @@ export function ChatInterface({ conversationId: propConversationId }: { conversa
                             // If API returns conversationId (new chat), update URL
                             if (data.conversationId && !activeConversationId) {
                                 window.history.replaceState(null, '', `/ai?c=${data.conversationId}`);
+                            }
+
+                            // Capture traceId for feedback
+                            if (data.traceId) {
+                                currentTraceId = data.traceId;
+                            }
+
+                            // Stream completion - add traceId to message
+                            if (data.done && currentTraceId) {
+                                setMessages(prev => {
+                                    const updated = [...prev];
+                                    const lastMsg = updated[updated.length - 1];
+                                    if (lastMsg.role === 'assistant') {
+                                        lastMsg.traceId = currentTraceId;
+                                    }
+                                    return updated;
+                                });
                             }
 
                             if (data.chunk) {
@@ -150,7 +175,15 @@ export function ChatInterface({ conversationId: propConversationId }: { conversa
                     </div>
                 ) : (
                     messages.map((msg, idx) => (
-                        <MessageBubble key={idx} message={msg} />
+                        <div key={idx}>
+                            <MessageBubble message={msg} />
+                            {/* Show feedback on AI messages that have a traceId */}
+                            {msg.role === 'assistant' && msg.traceId && msg.content && (
+                                <div className="ml-12 md:ml-0">
+                                    <MessageFeedback traceId={msg.traceId} />
+                                </div>
+                            )}
+                        </div>
                     ))
                 )}
                 {isLoading && (
@@ -192,3 +225,4 @@ export function ChatInterface({ conversationId: propConversationId }: { conversa
         </div>
     );
 }
+

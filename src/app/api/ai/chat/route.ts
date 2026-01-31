@@ -1,8 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient } from '@supabase/ssr';
 import { cookies } from 'next/headers';
-import { streamGemini } from '@/lib/ai/gemini';
-import { opik } from '@/lib/opik/client';
+import { trackedGeminiStream } from '@/lib/opik/gemini-tracker';
+import { evaluateOverallQuality } from '@/lib/opik/evaluators';
+import { trackPerformanceMetrics } from '@/lib/opik/performance';
 import { COMPANION_SYSTEM_INSTRUCTION, CHAT_CONTEXT_BUILDER } from '@/lib/ai/prompts';
 
 export async function POST(req: NextRequest) {
@@ -60,42 +61,84 @@ export async function POST(req: NextRequest) {
         const userData = await getUserContext(supabase, user.id);
         const systemInstruction = COMPANION_SYSTEM_INSTRUCTION + '\n\n' + CHAT_CONTEXT_BUILDER(userData);
 
-        // Stream response
+        // Stream response with Opik tracking
         const encoder = new TextEncoder();
-        let aiResponseText = '';
 
         const stream = new ReadableStream({
             async start(controller) {
                 // Send conversation ID first so client can update URL
                 controller.enqueue(encoder.encode(`data: ${JSON.stringify({ conversationId: activeConversationId })}\n\n`));
 
-                await streamGemini(
-                    messages,
-                    systemInstruction,
-                    (chunk) => {
-                        aiResponseText += chunk;
-                        controller.enqueue(encoder.encode(`data: ${JSON.stringify({ chunk })}\n\n`));
-                    }
-                );
+                let traceId = '';
+                let fullResponse = '';
+                let duration = 0;
+                let totalTokens = 0;
 
-                // Save AI Message after stream completes
-                if (aiResponseText) {
-                    await supabase.from('messages').insert({
-                        conversation_id: activeConversationId,
-                        role: 'assistant',
-                        content: aiResponseText
-                    });
+                try {
+                    // Use tracked Gemini stream with Opik integration
+                    const result = await trackedGeminiStream(
+                        'ai-chat-conversation',
+                        messages,
+                        systemInstruction,
+                        (chunk) => {
+                            fullResponse += chunk;
+                            controller.enqueue(encoder.encode(`data: ${JSON.stringify({ chunk })}\n\n`));
+                        },
+                        {
+                            userId: user.id,
+                            feature: 'ai-chat',
+                            conversationId: activeConversationId,
+                            messageCount: messages.length,
+                        }
+                    );
+
+                    traceId = result.traceId;
+                    duration = result.duration;
+                    totalTokens = result.totalTokens;
+
+                    // Save AI Message
+                    if (fullResponse) {
+                        await supabase.from('messages').insert({
+                            conversation_id: activeConversationId,
+                            role: 'assistant',
+                            content: fullResponse
+                        });
+                    }
+
+                    // Run evaluations (non-blocking)
+                    evaluateOverallQuality(traceId, fullResponse, {
+                        userName: userData.userName,
+                        activeGoals: userData.activeGoals,
+                        currentStreak: userData.currentStreak,
+                        preferredCategories: [],
+                    }).catch(err => console.error('[Opik] Evaluation error:', err));
+
+                    // Track performance metrics (non-blocking)
+                    trackPerformanceMetrics(traceId, 'ai-chat', {
+                        duration,
+                        totalTokens,
+                        model: 'gemini-2.5-flash-lite',
+                    }).catch(err => console.error('[Opik] Performance tracking error:', err));
+
+                    // Send completion with traceId for feedback collection
+                    controller.enqueue(encoder.encode(`data: ${JSON.stringify({
+                        done: true,
+                        traceId,
+                        metadata: {
+                            duration,
+                            tokens: totalTokens,
+                        }
+                    })}\n\n`));
+
+                } catch (error) {
+                    console.error('Stream error:', error);
+                    controller.enqueue(encoder.encode(`data: ${JSON.stringify({
+                        error: 'Failed to generate response'
+                    })}\n\n`));
                 }
 
                 controller.close();
             },
-        });
-
-        // Log to Opik (non-blocking)
-        opik.trace({
-            name: 'ai-chat',
-            input: { messages, conversationId: activeConversationId },
-            metadata: { userId: user.id },
         });
 
         return new NextResponse(stream, {
@@ -112,13 +155,11 @@ export async function POST(req: NextRequest) {
 }
 
 async function getUserContext(supabase: any, userId: string) {
-    // Fetch recent entries, active goals
-    // Wrap in try/catch to avoid breaking chat if DB query fails
     try {
-        const [entries, goals] = await Promise.all([
+        const [entries, goals, profile] = await Promise.all([
             supabase
                 .from('entries')
-                .select('entry_date, content')
+                .select('entry_date, content, mood')
                 .eq('user_id', userId)
                 .order('entry_date', { ascending: false })
                 .limit(5),
@@ -127,20 +168,38 @@ async function getUserContext(supabase: any, userId: string) {
                 .select('title, frequency, current_value, target_value, streak')
                 .eq('user_id', userId)
                 .eq('status', 'active'),
+            supabase
+                .from('profiles')
+                .select('full_name, preferred_categories')
+                .eq('id', userId)
+                .single(),
         ]);
 
+        // Calculate current streak from goals
+        const maxStreak = goals.data?.reduce((max: number, g: any) =>
+            Math.max(max, g.streak || 0), 0) || 0;
+
         return {
+            userName: profile.data?.full_name || 'there',
             recentEntries: entries.data || [],
             activeGoals: goals.data || [],
+            currentStreak: maxStreak,
             weeklyStats: {
                 totalEntries: entries.data?.length || 0,
                 goalsHit: 0,
                 totalGoals: goals.data?.length || 0,
-                topCategories: [],
+                topCategories: profile.data?.preferred_categories || [],
             },
         };
     } catch (e) {
         console.error("Context fetch failed", e);
-        return { recentEntries: [], activeGoals: [], weeklyStats: { totalEntries: 0, goalsHit: 0, totalGoals: 0, topCategories: [] } };
+        return {
+            userName: 'there',
+            recentEntries: [],
+            activeGoals: [],
+            currentStreak: 0,
+            weeklyStats: { totalEntries: 0, goalsHit: 0, totalGoals: 0, topCategories: [] }
+        };
     }
 }
+
