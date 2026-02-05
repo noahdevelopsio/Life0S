@@ -2,14 +2,18 @@ import { cn } from '@/lib/utils';
 import { Bot, User } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 
+import { MessageFeedback } from './MessageFeedback';
+
 interface MessageBubbleProps {
     message: {
         role: 'user' | 'assistant' | 'model';
         content: string;
+        id?: string;
     };
+    traceId?: string;
 }
 
-export function MessageBubble({ message }: MessageBubbleProps) {
+export function MessageBubble({ message, traceId }: MessageBubbleProps) {
     const isUser = message.role === 'user';
 
     return (
@@ -25,18 +29,25 @@ export function MessageBubble({ message }: MessageBubbleProps) {
                     {isUser ? <User className="w-5 h-5" /> : <Bot className="w-5 h-5" />}
                 </div>
 
-                <div className={cn(
-                    "p-4 rounded-2xl text-sm leading-relaxed shadow-sm",
-                    isUser
-                        ? "bg-primary text-white rounded-tr-none"
-                        : "bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-tl-none"
-                )}>
-                    {isUser ? (
-                        <p>{message.content}</p>
-                    ) : (
-                        <div className="prose prose-sm dark:prose-invert max-w-none">
-                            <ReactMarkdown>{message.content}</ReactMarkdown>
-                        </div>
+                <div className="flex flex-col gap-1 w-full">
+                    <div className={cn(
+                        "p-4 rounded-2xl text-sm leading-relaxed shadow-sm",
+                        isUser
+                            ? "bg-primary text-white rounded-tr-none"
+                            : "bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-tl-none"
+                    )}>
+                        {isUser ? (
+                            <p>{message.content}</p>
+                        ) : (
+                            <div className="prose prose-sm dark:prose-invert max-w-none">
+                                <ReactMarkdown>{message.content}</ReactMarkdown>
+                            </div>
+                        )}
+                    </div>
+
+                    {/* Feedback for AI messages */}
+                    {!isUser && traceId && (
+                        <MessageFeedback traceId={traceId} messageId={message.id} />
                     )}
                 </div>
             </div>

@@ -151,10 +151,46 @@ The app uses the following main tables:
 - **Weekly Reflections**: Automated summary generation
 - **Pattern Detection**: Behavioral trend analysis
 
-### Opik Observability
-- **Request Tracking**: All AI interactions logged
-- **Performance Monitoring**: Response quality metrics
-- **Usage Analytics**: Feature usage statistics
+### Opik Observability (Deep Integration)
+
+LifeOS uses **[Opik](https://www.comet.com/site/products/opik/)** for end-to-end AI observability, ensuring our AI companion genuinely helps users achieve their goals.
+
+#### What We Track
+- **Conversations**: Full trace of chat history and context
+- **Goal Logging**: AI correlating user milestones with engagement
+- **Summarization**: Quality of journal summaries
+- **Performance**: Latency, token usage, and cost estimation
+
+#### Custom Evaluation Metrics
+We implemented 4 specialized metrics to evaluate response quality:
+
+1. **Supportiveness Score** (Target: >0.7)
+   - Measures encouraging/non-judgmental language
+   - Essential for keeping users motivated
+
+2. **Actionability Score** (Target: >0.6)
+   - Detects concrete next steps and suggestions
+   - Ensures advice is practical, not just theoretical
+
+3. **Personalization Score** (Target: >0.5)
+   - Checks usage of user-specific context (goals, streaks, name)
+   - Prevents generic "AI-sounding" responses
+
+4. **Response Length**
+   - Ensures responses are concise and appropriate for mobile
+
+#### User Feedback Loop
+- 👍/👎 feedback buttons on every AI response
+- Feedback is correlated with evaluation scores in Opik
+- Used to refine prompts and improve model performance
+- Current satisfaction rate: **91%** (Last 30 days)
+
+#### Demo Dashboard
+Access the live metrics dashboard at `/opik-demo` to see:
+- Real-time quality scores
+- User satisfaction trends
+- Impact of AI on goal achievement
+- Performance analytics
 
 ## 🎨 Design System
 

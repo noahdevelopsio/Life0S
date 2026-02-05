@@ -1,0 +1,8 @@
+{
+    "crons": [
+        {
+            "path": "/api/cron/analyze-ai-quality",
+            "schedule": "0 0 * * 0"
+        }
+    ]
+}

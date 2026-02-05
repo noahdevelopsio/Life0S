@@ -175,15 +175,7 @@ export function ChatInterface({ conversationId: propConversationId }: { conversa
                     </div>
                 ) : (
                     messages.map((msg, idx) => (
-                        <div key={idx}>
-                            <MessageBubble message={msg} />
-                            {/* Show feedback on AI messages that have a traceId */}
-                            {msg.role === 'assistant' && msg.traceId && msg.content && (
-                                <div className="ml-12 md:ml-0">
-                                    <MessageFeedback traceId={msg.traceId} />
-                                </div>
-                            )}
-                        </div>
+                        <MessageBubble key={idx} message={msg} traceId={msg.traceId} />
                     ))
                 )}
                 {isLoading && (
