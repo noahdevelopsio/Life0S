@@ -9,9 +9,10 @@ import { cn } from '@/lib/utils';
 
 interface VoiceInputProps {
     onTranscript: (text: string) => void;
+    autoStart?: boolean;
 }
 
-export function VoiceInput({ onTranscript }: VoiceInputProps) {
+export function VoiceInput({ onTranscript, autoStart = false }: VoiceInputProps) {
     const [isClient, setIsClient] = useState(false);
 
     useEffect(() => {
@@ -31,6 +32,12 @@ export function VoiceInput({ onTranscript }: VoiceInputProps) {
         resetTranscript,
         browserSupportsSpeechRecognition
     } = useSpeechRecognition({ commands });
+
+    useEffect(() => {
+        if (isClient && autoStart && !listening && browserSupportsSpeechRecognition) {
+            SpeechRecognition.startListening({ continuous: true });
+        }
+    }, [isClient, autoStart, browserSupportsSpeechRecognition]);
 
     useEffect(() => {
         if (transcript) {

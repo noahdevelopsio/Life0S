@@ -19,11 +19,11 @@ const entrySchema = z.object({
 
 type EntryFormData = z.infer<typeof entrySchema>;
 
-export function EntryEditor({ onSave, initialContent = '' }: { onSave: (data: any) => Promise<void>, initialContent?: string }) {
+export function EntryEditor({ onSave, initialContent = '', initialMode = 'text' }: { onSave: (data: any) => Promise<void>, initialContent?: string, initialMode?: 'text' | 'voice' }) {
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [autoSuggestions, setAutoSuggestions] = useState<any>(null);
 
-  const { register, handleSubmit, watch, setValue, formState: { errors } } = useForm<EntryFormData>({
+  const { register, handleSubmit, watch, setValue, formState: { errors, isSubmitting } } = useForm<EntryFormData>({
     resolver: zodResolver(entrySchema),
     defaultValues: {
       content: initialContent,
@@ -85,7 +85,7 @@ export function EntryEditor({ onSave, initialContent = '' }: { onSave: (data: an
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
       <div className="flex justify-between items-center">
         <h2 className="text-xl font-semibold">New Entry</h2>
-        <VoiceInput onTranscript={handleVoiceInput} />
+        <VoiceInput onTranscript={handleVoiceInput} autoStart={initialMode === 'voice'} />
       </div>
 
       <Textarea
@@ -110,17 +110,31 @@ export function EntryEditor({ onSave, initialContent = '' }: { onSave: (data: an
         <div>
           <label className="text-sm font-medium mb-2 block">Mood</label>
           <div className="flex flex-wrap gap-2">
-            {['great', 'good', 'okay', 'bad', 'terrible'].map((mood) => (
-              <Button
-                key={mood}
-                type="button"
-                variant={watch('mood') === mood ? 'default' : 'outline'}
-                onClick={() => setValue('mood', mood as any)}
-                className="capitalize"
-              >
-                {mood}
-              </Button>
-            ))}
+            {[
+              { value: 'great', label: 'Great', emoji: '🤩', color: 'bg-green-100 text-green-700 border-green-200 hover:bg-green-200' },
+              { value: 'good', label: 'Good', emoji: '🙂', color: 'bg-blue-100 text-blue-700 border-blue-200 hover:bg-blue-200' },
+              { value: 'okay', label: 'Okay', emoji: '😐', color: 'bg-slate-100 text-slate-700 border-slate-200 hover:bg-slate-200' },
+              { value: 'bad', label: 'Bad', emoji: '😕', color: 'bg-orange-100 text-orange-700 border-orange-200 hover:bg-orange-200' },
+              { value: 'terrible', label: 'Terrible', emoji: '😫', color: 'bg-red-100 text-red-700 border-red-200 hover:bg-red-200' },
+            ].map((option) => {
+              const isSelected = watch('mood') === option.value;
+              return (
+                <button
+                  key={option.value}
+                  type="button"
+                  onClick={() => setValue('mood', option.value as any)}
+                  className={cn(
+                    "flex flex-col items-center justify-center p-3 rounded-2xl border transition-all duration-200 w-20 h-20 gap-1",
+                    isSelected
+                      ? cn(option.color, "ring-2 ring-offset-2 ring-primary/20 scale-105 shadow-sm")
+                      : "bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 hover:scale-105"
+                  )}
+                >
+                  <span className="text-2xl">{option.emoji}</span>
+                  <span className="text-xs font-medium">{option.label}</span>
+                </button>
+              );
+            })}
           </div>
         </div>
 
@@ -134,8 +148,15 @@ export function EntryEditor({ onSave, initialContent = '' }: { onSave: (data: an
         </div>
       </div>
 
-      <Button type="submit" size="lg" className="w-full h-12 text-lg">
-        Save Entry
+      <Button type="submit" size="lg" className="w-full h-12 text-lg" disabled={isSubmitting}>
+        {isSubmitting ? (
+          <>
+            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+            Saving Entry...
+          </>
+        ) : (
+          'Save Entry'
+        )}
       </Button>
     </form>
   );

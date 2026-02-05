@@ -11,6 +11,7 @@ import { Spinner } from '@/components/ui/spinner';
 function JournalEditorWrapper() {
   const searchParams = useSearchParams();
   const initialContent = searchParams.get('initial') || '';
+  const initialMode = (searchParams.get('mode') as 'text' | 'voice') || 'text';
   const router = useRouter();
   const { user } = useUser();
 
@@ -28,7 +29,10 @@ function JournalEditorWrapper() {
 
       if (error) throw error;
 
-      await trackFeatureUsageAction('journal_entry_created', user.id);
+      // Track with 1 second timeout to ensure we never block redirect indefinitely
+      const trackingPromise = trackFeatureUsageAction('journal_entry_created', user.id);
+      const timeoutPromise = new Promise(resolve => setTimeout(resolve, 1000));
+      await Promise.race([trackingPromise, timeoutPromise]);
 
       router.push('/journal');
       router.refresh();
@@ -38,7 +42,7 @@ function JournalEditorWrapper() {
     }
   };
 
-  return <EntryEditor onSave={handleSave} initialContent={initialContent} />;
+  return <EntryEditor onSave={handleSave} initialContent={initialContent} initialMode={initialMode} />;
 }
 
 export default function NewEntryPage() {

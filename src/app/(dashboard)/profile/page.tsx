@@ -10,18 +10,19 @@ import { DashboardCard } from '@/components/dashboard/DashboardCard';
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { cn } from '@/lib/utils';
+import { useThemeStore } from '@/store/themeStore';
 
 export default function ProfilePage() {
     const { user, loading: userLoading } = useUser();
     const router = useRouter();
+    const { theme, setTheme } = useThemeStore();
     const [stats, setStats] = useState({
-        streak: 8, // Mocked for now, implies calculation logic needed
+        streak: 0,
         weeklyEntries: 0,
         goalsHit: 0,
         consistency: 0
     });
     const [loadingStats, setLoadingStats] = useState(true);
-    const [isDarkMode, setIsDarkMode] = useState(false); // Local state for UI demo
 
     useEffect(() => {
         if (!user) return;
@@ -42,15 +43,6 @@ export default function ProfilePage() {
                     .order('entry_date', { ascending: false });
 
                 // 2. Fetch completed goals
-                const { count: goalsHitCount } = await supabase
-                    .from('goals')
-                    .select('*', { count: 'exact', head: true })
-                    .eq('user_id', user!.id)
-                    .gte('current_value', 100); // Assuming 100% or logic matches goal completion. 
-                // Actually, let's fix this based on how goals are tracked. 
-                // Re-reading previous context: goals have current_value and target_value.
-                // We need to fetch and compare.
-
                 const { data: allGoals } = await supabase
                     .from('goals')
                     .select('current_value, target_value')
@@ -64,7 +56,8 @@ export default function ProfilePage() {
                 // Calculate Streak
                 let currentStreak = 0;
                 if (entries && entries.length > 0) {
-                    const uniqueDates = Array.from(new Set(entries.map(e => e.entry_date))).sort().reverse();
+                    // Normalize dates to YYYY-MM-DD to handle timestamps correctly
+                    const uniqueDates = Array.from(new Set(entries.map(e => e.entry_date.split('T')[0]))).sort().reverse();
 
                     // Check if the most recent entry is today or yesterday
                     const todayStr = new Date().toISOString().split('T')[0];
@@ -114,9 +107,11 @@ export default function ProfilePage() {
         router.push('/login');
     };
 
+    const isDarkMode = theme === 'dark' || (theme === 'system' && typeof window !== 'undefined' && window.matchMedia('(prefers-color-scheme: dark)').matches);
+
     const toggleTheme = () => {
-        setIsDarkMode(!isDarkMode);
-        document.documentElement.classList.toggle('dark');
+        const newTheme = isDarkMode ? 'light' : 'dark';
+        setTheme(newTheme);
     };
 
     if (userLoading) {
