@@ -75,6 +75,7 @@
     "dotenv": "^17.2.3",
     "eslint": "^9",
     "eslint-config-next": "16.1.4",
+    "supabase": "^2.76.6",
     "tailwindcss": "^4",
     "ts-node": "^10.9.2",
     "typescript": "^5"

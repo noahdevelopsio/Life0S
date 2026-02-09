@@ -67,10 +67,10 @@ export async function geminiJSON<T>(
         const response = await result.response;
         const text = response.text();
 
-        // Note: Opik tracing should be done in API routes, not here
 
+        let cleanText = text.replace(/```json\n?|```/g, '').trim();
         try {
-            return JSON.parse(text) as T;
+            return JSON.parse(cleanText) as T;
         } catch (e) {
             console.error("Failed to parse JSON response", text);
             throw new Error("Invalid JSON response from AI");
