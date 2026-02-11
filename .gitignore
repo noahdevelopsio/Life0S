@@ -119,4 +119,4 @@ temp/
 # LifeOS specific
 UI-DESIGN/
 public/sw.js
-
+scripts/seed.ts

@@ -15,57 +15,43 @@ if (!supabaseUrl || !supabaseServiceKey) {
 
 const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
-const USER_ID = process.argv[2];
+const USER_ID = process.argv[2] || ''; // Default to specific user if not provided
 
 if (!USER_ID) {
     console.error('Please provide a User ID as an argument');
     process.exit(1);
 }
 
-const SAMPLE_ENTRIES = [
-    {
-        content: "Had a really productive day today! Finished the big presentation and felt good about it. Went for a run in the evening which cleared my head.",
-        mood: "great",
-        tags: ["work", "fitness", "productivity"],
-        offset: 0 // Today
-    },
-    {
-        content: "Feeling a bit sluggish. Didn't sleep well. Struggled to focus on coding tasks. Need to prioritize sleep tonight.",
-        mood: "okay",
-        tags: ["health", "sleep"],
-        offset: 1
-    },
-    {
-        content: "Met up with Sarah for coffee. It was nice to catch up. Anxiety about the upcoming deadline is creeping in though.",
-        mood: "good",
-        tags: ["social", "anxiety"],
-        offset: 2
-    },
-    {
-        content: "Terrible day. Arguments at home and nothing went right at work. Just want this day to end.",
-        mood: "bad",
-        tags: ["family", "stress"],
-        offset: 3
-    },
-    {
-        content: "Amazing workout session! Hit a new PR. Reading a new book 'Atomic Habits' which is inspiring.",
-        mood: "great",
-        tags: ["fitness", "learning"],
-        offset: 4
-    },
-    {
-        content: "Quiet Sunday. Meal prepped for the week. Feeling prepared and calm.",
-        mood: "good",
-        tags: ["productivity", "planning"],
-        offset: 5
-    },
-    {
-        content: "Standard work day. Nothing special. Just grinding through the backlog.",
-        mood: "okay",
-        tags: ["work"],
-        offset: 6
-    }
-];
+// Generate 30 days of varied entries
+const SAMPLE_ENTRIES = Array.from({ length: 30 }, (_, i) => {
+    const moods = ['great', 'good', 'okay', 'bad', 'terrible'];
+    const tags = [
+        ['work', 'productivity'],
+        ['health', 'fitness'],
+        ['social', 'family'],
+        ['stress', 'work'],
+        ['learning', 'growth'],
+        ['relax', 'hobbies']
+    ];
+
+    // Create patterns: Weekends are better, Monday is stressful
+    const date = new Date();
+    date.setDate(date.getDate() - i);
+    const day = date.getDay();
+
+    let mood = moods[Math.floor(Math.random() * 3)]; // Default good/great/okay
+    if (day === 1) mood = Math.random() > 0.5 ? 'bad' : 'okay'; // Mondays tough
+    if (day === 0 || day === 6) mood = 'great'; // Weekends great
+
+    return {
+        content: `Journal entry for day ${i}. Today was a ${mood} day. I focused on ${tags[i % tags.length].join(' and ')}. ` +
+            (mood === 'great' ? "Felt really energetic and accomplished." :
+                mood === 'bad' ? "Struggled a bit with motivation." : "Just a regular day."),
+        mood,
+        tags: tags[i % tags.length],
+        offset: i
+    };
+});
 
 const SAMPLE_GOALS = [
     {
@@ -76,38 +62,50 @@ const SAMPLE_GOALS = [
         frequency: "weekly",
         category_id: null,
         status: "active",
-        streak: 3
+        streak: 15
     },
     {
         title: "Read 30 mins",
         description: "Read before bed",
         target_value: 7,
-        current_value: 5,
+        current_value: 6,
         frequency: "weekly",
         status: "active",
-        streak: 12
+        streak: 4
     },
     {
-        title: "Code Side Project",
-        description: "Work on LifeOS",
+        title: "Deep Work",
+        description: "2 hours of focused work",
         target_value: 10,
-        current_value: 10,
+        current_value: 8,
         frequency: "weekly",
-        status: "completed",
-        streak: 5
+        status: "active",
+        streak: 8
+    },
+    {
+        title: "Meditation",
+        description: "10 mins mindfulness",
+        target_value: 7,
+        current_value: 2,
+        frequency: "weekly",
+        status: "active",
+        streak: 2
     }
 ];
 
 async function seed() {
-    console.log(`Seeding data for user: ${USER_ID}...`);
+    console.log(`Seeding EXTENDED data for user: ${USER_ID}...`);
 
     // 0. Cleanup
     console.log('Cleaning up existing data...');
+    // Note: Deleting reflections mostly to force regeneration, but keeping them might be useful?
+    // Let's clear them so we can test "first reflection" flow again with new data
+    await supabase.from('reflections').delete().eq('user_id', USER_ID);
     await supabase.from('entries').delete().eq('user_id', USER_ID);
     await supabase.from('goals').delete().eq('user_id', USER_ID);
 
     // 1. Insert Entries
-    console.log('Inserting entries...');
+    console.log('Inserting 30 days of entries...');
     const entriesDeps = SAMPLE_ENTRIES.map(e => {
         const date = new Date();
         date.setDate(date.getDate() - e.offset);
@@ -116,7 +114,7 @@ async function seed() {
             content: e.content,
             mood: e.mood,
             tags: e.tags,
-            entry_date: date.toISOString(), // ISO timestamp
+            entry_date: date.toISOString(),
             created_at: date.toISOString()
         };
     });
@@ -136,7 +134,7 @@ async function seed() {
     if (goalsError) console.error('Error seeding goals:', goalsError);
     else console.log(`✓ Inserted ${goalsData.length} goals`);
 
-    console.log('Seeding complete!');
+    console.log('Seeding complete! You can now test the Reflection generation.');
 }
 
 seed();
