@@ -7,7 +7,24 @@ interface ThemeState {
   theme: Theme
   setTheme: (theme: Theme) => void
   resolvedTheme: 'light' | 'dark'
-  setResolvedTheme: (theme: 'light' | 'dark') => void
+  _hasHydrated: boolean
+  setHasHydrated: (state: boolean) => void
+}
+
+function applyThemeToDOM(theme: Theme): 'light' | 'dark' {
+  if (typeof window === 'undefined') return 'light'
+
+  const root = window.document.documentElement
+  root.classList.remove('light', 'dark')
+
+  if (theme === 'system') {
+    const systemTheme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'
+    root.classList.add(systemTheme)
+    return systemTheme
+  } else {
+    root.classList.add(theme)
+    return theme
+  }
 }
 
 export const useThemeStore = create<ThemeState>()(
@@ -15,32 +32,25 @@ export const useThemeStore = create<ThemeState>()(
     (set, get) => ({
       theme: 'system',
       resolvedTheme: 'light',
+      _hasHydrated: false,
+      setHasHydrated: (state) => set({ _hasHydrated: state }),
       setTheme: (theme) => {
-        set({ theme })
-        // Apply theme to document
-        const root = window.document.documentElement
-        root.classList.remove('light', 'dark')
-
-        if (theme === 'system') {
-          const systemTheme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'
-          root.classList.add(systemTheme)
-          set({ resolvedTheme: systemTheme })
-        } else {
-          root.classList.add(theme)
-          set({ resolvedTheme: theme })
-        }
+        const resolved = applyThemeToDOM(theme)
+        set({ theme, resolvedTheme: resolved })
       },
-      setResolvedTheme: (resolvedTheme) => set({ resolvedTheme }),
     }),
     {
       name: 'theme-storage',
       partialize: (state) => ({ theme: state.theme }),
+      onRehydrateStorage: () => (state) => {
+        // Called AFTER zustand has read from localStorage
+        if (state) {
+          state.setHasHydrated(true)
+          // Apply the persisted theme to the DOM
+          const resolved = applyThemeToDOM(state.theme)
+          state.resolvedTheme = resolved
+        }
+      },
     }
   )
 )
-
-// Initialize theme on client side
-if (typeof window !== 'undefined') {
-  const theme = useThemeStore.getState().theme
-  useThemeStore.getState().setTheme(theme)
-}

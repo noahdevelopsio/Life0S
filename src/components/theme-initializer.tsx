@@ -4,12 +4,17 @@ import { useEffect } from 'react';
 import { useThemeStore } from '@/store/themeStore';
 
 export function ThemeInitializer() {
-    const { theme, setTheme } = useThemeStore();
+    const theme = useThemeStore((s) => s.theme);
+    const setTheme = useThemeStore((s) => s.setTheme);
+    const hasHydrated = useThemeStore((s) => s._hasHydrated);
 
     useEffect(() => {
-        // Re-apply theme on amount to ensure document class is correct
-        setTheme(theme);
-    }, [theme, setTheme]);
+        // Only apply theme AFTER zustand has rehydrated from localStorage
+        // This prevents the default 'system' from overwriting the user's saved preference
+        if (hasHydrated) {
+            setTheme(theme);
+        }
+    }, [theme, setTheme, hasHydrated]);
 
     return null;
 }

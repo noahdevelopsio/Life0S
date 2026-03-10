@@ -1,5 +1,8 @@
 @import "tailwindcss";
 
+/* Tell Tailwind v4 to use .dark class for dark: variants */
+@custom-variant dark (&:is(.dark *));
+
 @theme {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
@@ -37,10 +40,20 @@
 }
 
 @media (prefers-color-scheme: dark) {
-  :root {
+  :root:not(.light) {
     --background: #0F1410;
     --foreground: #ededed;
   }
+}
+
+.dark {
+  --background: #0F1410;
+  --foreground: #ededed;
+}
+
+.light {
+  --background: #F8FAF9;
+  --foreground: #171717;
 }
 
 body {
