@@ -39,8 +39,12 @@ export async function middleware(request: NextRequest) {
 
 
 
+  // Define routes that require authentication
+  const protectedRoutes = ['/dashboard', '/journal', '/goals', '/timeline', '/ai', '/reflections', '/profile', '/opik-demo', '/onboarding'];
+  const isProtectedRoute = protectedRoutes.some(route => request.nextUrl.pathname.startsWith(route));
+
   // Protect dashboard and other authenticated routes
-  if (request.nextUrl.pathname.startsWith('/dashboard') && !user) {
+  if (isProtectedRoute && !user) {
     return NextResponse.redirect(new URL('/login', request.url))
   }
 
@@ -55,8 +59,8 @@ export async function middleware(request: NextRequest) {
     return NextResponse.redirect(new URL('/dashboard', request.url))
   }
 
-  // Redirect to onboarding if user exists but hasn't onboarded
-  if (user && request.nextUrl.pathname === '/dashboard') {
+  // Redirect to onboarding if user exists but hasn't onboarded (applies to all protected routes except /onboarding itself)
+  if (user && isProtectedRoute && !request.nextUrl.pathname.startsWith('/onboarding')) {
     const { data: profile } = await supabase
       .from('profiles')
       .select('onboarded')
